@@ -38,6 +38,7 @@ type InterviewType = (typeof interviewTypes)[number];
 type ExperienceLevel = (typeof experienceLevels)[number];
 
 const TOTAL_QUESTIONS = 5;
+const FREE_SESSION_LIMIT = 3;
 
 const mockQuestions: Record<InterviewType, string[]> = {
   "HR Round": [
@@ -183,6 +184,8 @@ export default function InterviewPage() {
   const [evaluating, setEvaluating] = useState(false);
   const [evalError, setEvalError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [sessionsUsed, setSessionsUsed] = useState(0);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
 
   const questions = useMemo(() => mockQuestions[interviewType], [interviewType]);
   const currentQuestion = questions[questionIndex];
@@ -192,12 +195,54 @@ export default function InterviewPage() {
       ? ((questionIndex + (evaluating ? 0 : 0)) / TOTAL_QUESTIONS) * 100
       : 100;
 
+  const sessionLimitReached = sessionsUsed >= FREE_SESSION_LIMIT;
+
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUserId(user?.id ?? null);
     });
   }, []);
+
+  async function getSessionAuthHeaders(): Promise<HeadersInit> {
+    const supabase = createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const headers: HeadersInit = {};
+    if (session?.access_token) {
+      headers.Authorization = `Bearer ${session.access_token}`;
+    }
+    return headers;
+  }
+
+  async function fetchSessionUsage() {
+    setSessionsLoading(true);
+    try {
+      const authHeaders = await getSessionAuthHeaders();
+      const res = await fetch("/api/sessions", {
+        credentials: "include",
+        headers: authHeaders,
+      });
+      const data = await res.json();
+      console.log("GET /api/sessions response:", res.status, data);
+
+      if (res.ok) {
+        setSessionsUsed(data.sessionsUsed ?? 0);
+      }
+    } catch (err) {
+      console.error("Failed to fetch session usage:", err);
+    } finally {
+      setSessionsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (step === "setup") {
+      fetchSessionUsage();
+    }
+  }, [step]);
 
   useEffect(() => {
     if (step !== "interview" || evaluating) return;
@@ -240,11 +285,36 @@ export default function InterviewPage() {
     }
   }
 
+  async function incrementSessionUsage() {
+    try {
+      const authHeaders = await getSessionAuthHeaders();
+      const res = await fetch("/api/sessions", {
+        method: "POST",
+        credentials: "include",
+        headers: authHeaders,
+      });
+      const data = await res.json();
+      console.log("POST /api/sessions response:", res.status, data);
+
+      if (!res.ok) {
+        console.error("Session increment failed:", data);
+        return;
+      }
+
+      setSessionsUsed(data.sessionsUsed ?? 0);
+      await fetchSessionUsage();
+    } catch (err) {
+      console.error("Failed to increment session usage:", err);
+    }
+  }
+
   async function completeInterview(evals: EvaluationResult[]) {
     const agg = aggregateEvaluations(evals);
     setResults(agg);
     setStep("results");
+
     await saveSessionToDatabase(agg);
+    await incrementSessionUsage();
   }
 
   async function evaluateAnswer(answerText: string) {
@@ -350,6 +420,8 @@ export default function InterviewPage() {
   }
 
   function handleStartInterview() {
+    if (sessionLimitReached) return;
+
     setQuestionIndex(0);
     setAnswer("");
     setElapsedSeconds(0);
@@ -389,6 +461,22 @@ export default function InterviewPage() {
               <p className="mt-2 text-sm text-zinc-400">
                 Set up your mock interview — 5 questions with real AI evaluation.
               </p>
+
+              <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#00C853]/30 bg-[#00C853]/10 px-4 py-1.5 text-sm font-medium text-[#00C853]">
+                {sessionsLoading ? (
+                  "Loading session usage..."
+                ) : (
+                  <>
+                    {sessionsUsed} of {FREE_SESSION_LIMIT} free sessions used this week
+                  </>
+                )}
+              </div>
+
+              {sessionLimitReached && (
+                <p className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                  Session limit reached. Upgrade to Pro
+                </p>
+              )}
 
               <div className="mt-8 space-y-6">
                 <div>
@@ -448,7 +536,8 @@ export default function InterviewPage() {
                 <button
                   type="button"
                   onClick={handleStartInterview}
-                  className="w-full rounded-xl bg-[#00C853] py-4 text-base font-semibold text-black transition-colors hover:bg-[#00b34a]"
+                  disabled={sessionLimitReached || sessionsLoading}
+                  className="w-full rounded-xl bg-[#00C853] py-4 text-base font-semibold text-black transition-colors hover:bg-[#00b34a] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Start Interview
                 </button>
