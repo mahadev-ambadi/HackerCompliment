@@ -8,21 +8,29 @@ const dashboardCards = [
     title: "Start Mock Interview",
     description: "Practice with AI using real company interview patterns.",
     primary: true,
+    href: "/interview",
+    label: "Start Now",
   },
   {
     title: "Analyze My Resume",
     description: "Get your ATS score and improvement suggestions.",
     primary: false,
+    href: "/resume",
+    label: "Open",
   },
   {
     title: "My Progress",
     description: "Track your interview readiness over time.",
     primary: false,
+    href: "#",
+    label: "Open",
   },
   {
     title: "Interview History",
     description: "Review past sessions and feedback reports.",
     primary: false,
+    href: "#",
+    label: "Open",
   },
 ];
 
@@ -83,16 +91,16 @@ export default async function DashboardPage() {
               <p className="mt-2 flex-1 text-sm leading-relaxed text-zinc-400">
                 {card.description}
               </p>
-              <button
-                type="button"
-                className={`mt-6 w-full rounded-xl py-3 text-sm font-semibold transition-colors ${
+              <Link
+                href={card.href}
+                className={`mt-6 block w-full rounded-xl py-3 text-center text-sm font-semibold transition-colors ${
                   card.primary
                     ? "bg-[#00C853] text-black hover:bg-[#00b34a]"
                     : "border border-zinc-700 text-white hover:border-[#00C853]/50 hover:bg-zinc-800"
                 }`}
               >
-                {card.primary ? "Start Now" : "Open"}
-              </button>
+                {card.label}
+              </Link>
             </div>
           ))}
         </div>
