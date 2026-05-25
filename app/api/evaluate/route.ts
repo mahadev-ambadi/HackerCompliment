@@ -1,4 +1,5 @@
 import Groq from "groq-sdk";
+import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 export type EvaluationResult = {
@@ -45,17 +46,84 @@ function parseEvaluation(raw: Record<string, unknown>): EvaluationResult {
   };
 }
 
+async function saveInterviewSession(
+  userId: string,
+  company: string,
+  role: string,
+  interviewType: string,
+  experienceLevel: string,
+  evaluation: EvaluationResult,
+  duration: number
+) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error("Supabase credentials not configured for session save.");
+    return;
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+
+  const { error } = await supabase.from("interview_sessions").insert({
+    user_id: userId,
+    company,
+    role,
+    interview_type: interviewType,
+    experience_level: experienceLevel,
+    overall_score: evaluation.overallScore,
+    technical_score: evaluation.technicalScore,
+    communication_score: evaluation.communicationScore,
+    problem_solving_score: evaluation.problemSolvingScore,
+    confidence_score: evaluation.confidenceScore,
+    strengths: evaluation.strengths,
+    improvements: evaluation.improvements,
+    detailed_feedback: evaluation.detailedFeedback,
+    would_recommend: evaluation.wouldRecommend,
+    duration_seconds: duration,
+  });
+
+  if (error) {
+    console.error("Failed to save interview session:", error);
+  }
+}
+
 export async function POST(request: Request) {
   try {
+    const body = await request.json();
+    const {
+      question,
+      answer,
+      company,
+      role,
+      interviewType,
+      experienceLevel,
+      user_id,
+      duration,
+      saveSession,
+      sessionEvaluation,
+    } = body;
+
+    if (saveSession && user_id && sessionEvaluation) {
+      const evaluation = parseEvaluation(sessionEvaluation as Record<string, unknown>);
+      await saveInterviewSession(
+        user_id,
+        company,
+        role,
+        interviewType,
+        experienceLevel,
+        evaluation,
+        duration ?? 0
+      );
+      return NextResponse.json(evaluation);
+    }
+
     if (!process.env.GROQ_API_KEY) {
       return NextResponse.json(
         { error: "Groq API key is not configured." },
         { status: 500 }
       );
     }
-
-    const { question, answer, company, role, interviewType, experienceLevel } =
-      await request.json();
 
     if (!question || !company || !role || !interviewType || !experienceLevel) {
       return NextResponse.json(
@@ -120,6 +188,18 @@ Evaluate this answer now. Return only JSON.`,
       .trim();
 
     const evaluation = parseEvaluation(JSON.parse(cleanJson) as Record<string, unknown>);
+
+    if (saveSession && user_id) {
+      await saveInterviewSession(
+        user_id,
+        company,
+        role,
+        interviewType,
+        experienceLevel,
+        evaluation,
+        duration ?? 0
+      );
+    }
 
     return NextResponse.json(evaluation);
   } catch (error) {

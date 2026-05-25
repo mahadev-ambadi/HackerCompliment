@@ -29,10 +29,24 @@ const dashboardCards = [
     title: "Interview History",
     description: "Review past sessions and feedback reports.",
     primary: false,
-    href: "#",
+    href: "/history",
     label: "Open",
   },
 ];
+
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getScoreColor(score: number) {
+  if (score < 50) return "text-red-400";
+  if (score < 70) return "text-yellow-400";
+  return "text-[#00C853]";
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -43,6 +57,13 @@ export default async function DashboardPage() {
   if (!user) {
     redirect("/login");
   }
+
+  const { data: recentSessions } = await supabase
+    .from("interview_sessions")
+    .select("id, company, role, overall_score, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(3);
 
   const displayName =
     user.user_metadata?.full_name ||
@@ -80,6 +101,51 @@ export default async function DashboardPage() {
             3 free sessions this week
           </span>
         </div>
+
+        {recentSessions && recentSessions.length > 0 && (
+          <div className="mb-8 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-white">Recent Interviews</h2>
+              <Link
+                href="/history"
+                className="text-sm font-medium text-[#00C853] hover:text-[#00b34a]"
+              >
+                View All →
+              </Link>
+            </div>
+            <div className="space-y-3">
+              {recentSessions.map(
+                (session: {
+                  id: string;
+                  company: string;
+                  role: string;
+                  overall_score: number;
+                  created_at: string;
+                }) => (
+                  <Link
+                    key={session.id}
+                    href="/history"
+                    className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-800/30 px-4 py-3 transition-colors hover:border-[#00C853]/30"
+                  >
+                    <div>
+                      <p className="font-medium text-white">
+                        {session.company} · {session.role}
+                      </p>
+                      <p className="text-xs text-zinc-500">
+                        {formatDate(session.created_at)}
+                      </p>
+                    </div>
+                    <span
+                      className={`text-xl font-bold ${getScoreColor(session.overall_score)}`}
+                    >
+                      {session.overall_score}
+                    </span>
+                  </Link>
+                )
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="grid gap-6 sm:grid-cols-2">
           {dashboardCards.map((card) => (

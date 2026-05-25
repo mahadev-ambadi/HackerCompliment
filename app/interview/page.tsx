@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { EvaluationResult } from "@/app/api/evaluate/route";
+import { createClient } from "@/lib/supabase";
 
 type Step = "setup" | "interview" | "results";
 
@@ -78,6 +79,20 @@ function formatTime(seconds: number) {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+}
+
+function aggregatedToSessionPayload(agg: AggregatedResults) {
+  return {
+    overallScore: agg.overall,
+    technicalScore: agg.technical,
+    communicationScore: agg.communication,
+    problemSolvingScore: agg.problemSolving,
+    confidenceScore: agg.confidence,
+    strengths: agg.strengths,
+    improvements: agg.improvements,
+    detailedFeedback: agg.detailedFeedback,
+    wouldRecommend: agg.wouldRecommend,
+  };
 }
 
 function aggregateEvaluations(evals: EvaluationResult[]): AggregatedResults {
@@ -167,6 +182,7 @@ export default function InterviewPage() {
   const [results, setResults] = useState<AggregatedResults | null>(null);
   const [evaluating, setEvaluating] = useState(false);
   const [evalError, setEvalError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const questions = useMemo(() => mockQuestions[interviewType], [interviewType]);
   const currentQuestion = questions[questionIndex];
@@ -175,6 +191,13 @@ export default function InterviewPage() {
     step === "interview"
       ? ((questionIndex + (evaluating ? 0 : 0)) / TOTAL_QUESTIONS) * 100
       : 100;
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUserId(user?.id ?? null);
+    });
+  }, []);
 
   useEffect(() => {
     if (step !== "interview" || evaluating) return;
@@ -194,6 +217,36 @@ export default function InterviewPage() {
     return () => clearTimeout(timeout);
   }, [step, questionIndex, evaluating]);
 
+  async function saveSessionToDatabase(agg: AggregatedResults) {
+    if (!userId) return;
+
+    try {
+      await fetch("/api/evaluate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          saveSession: true,
+          user_id: userId,
+          company,
+          role,
+          interviewType,
+          experienceLevel,
+          duration: elapsedSeconds,
+          sessionEvaluation: aggregatedToSessionPayload(agg),
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to save interview session:", err);
+    }
+  }
+
+  async function completeInterview(evals: EvaluationResult[]) {
+    const agg = aggregateEvaluations(evals);
+    setResults(agg);
+    setStep("results");
+    await saveSessionToDatabase(agg);
+  }
+
   async function evaluateAnswer(answerText: string) {
     setEvalError(null);
     setEvaluating(true);
@@ -209,6 +262,8 @@ export default function InterviewPage() {
           role,
           interviewType,
           experienceLevel,
+          user_id: userId,
+          duration: elapsedSeconds,
         }),
       });
 
@@ -244,8 +299,7 @@ export default function InterviewPage() {
     if (questionIndex < TOTAL_QUESTIONS - 1) {
       setQuestionIndex((i) => i + 1);
     } else {
-      setResults(aggregateEvaluations(updated));
-      setStep("results");
+      await completeInterview(updated);
     }
   }
 
@@ -261,8 +315,7 @@ export default function InterviewPage() {
     if (questionIndex < TOTAL_QUESTIONS - 1) {
       setQuestionIndex((i) => i + 1);
     } else {
-      setResults(aggregateEvaluations(updated));
-      setStep("results");
+      await completeInterview(updated);
     }
   }
 
@@ -270,16 +323,14 @@ export default function InterviewPage() {
     if (evaluating) return;
 
     if (evaluations.length > 0) {
-      setResults(aggregateEvaluations(evaluations));
-      setStep("results");
+      await completeInterview(evaluations);
       return;
     }
 
     if (answer.trim()) {
       const updated = await evaluateAnswer(answer.trim());
       if (updated) {
-        setResults(aggregateEvaluations(updated));
-        setStep("results");
+        await completeInterview(updated);
       }
       return;
     }
