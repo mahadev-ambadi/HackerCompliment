@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, Suspense } from "react";
 import { createClient } from "@/lib/supabase";
 
 function Logo() {
@@ -54,7 +54,16 @@ const inputClass =
   "w-full rounded-xl border border-zinc-700 bg-zinc-800/50 px-4 py-3 text-sm text-white placeholder-zinc-500 outline-none transition-colors focus:border-[#00C853]/50 focus:ring-1 focus:ring-[#00C853]/30";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center text-white">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   const [email, setEmail] = useState("");
@@ -93,7 +102,8 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    const redirect = searchParams.get('redirect') || '/dashboard';
+    router.push(redirect);
     router.refresh();
   }
 

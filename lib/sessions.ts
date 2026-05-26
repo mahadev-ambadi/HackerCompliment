@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type SessionUsage = {
-  sessionsUsed: number;
+  sessions_used: number;
   weekStart: string;
 };
 
@@ -38,11 +38,11 @@ export async function getSessionUsage(userId: string): Promise<SessionUsage> {
     : null;
 
   if (!data || storedWeek !== weekStart) {
-    return { sessionsUsed: 0, weekStart };
+    return { sessions_used: 0, weekStart };
   }
 
   return {
-    sessionsUsed: data.sessions_used ?? 0,
+    sessions_used: data.sessions_used ?? 0,
     weekStart,
   };
 }
@@ -84,5 +84,5 @@ export async function incrementSession(userId: string): Promise<SessionUsage> {
     throw upsertError;
   }
 
-  return { sessionsUsed, weekStart };
+  return { sessions_used: sessionsUsed, weekStart };
 }

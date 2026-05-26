@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import LogoutButton from "@/components/LogoutButton";
+import SessionTracker from "@/components/SessionTracker";
 import { createClient } from "@/lib/supabase/server";
 
 const dashboardCards = [
@@ -146,6 +147,8 @@ export default async function DashboardPage() {
             </div>
           </div>
         )}
+
+        <SessionTracker userId={user.id} />
 
         <div className="grid gap-6 sm:grid-cols-2">
           {dashboardCards.map((card) => (

@@ -6,5 +6,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/interview/:path*", "/api/sessions"],
+  matcher: ["/dashboard/:path*", "/interview/:path*", "/api/session-limit"],
 };

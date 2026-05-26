@@ -2,6 +2,14 @@ import Groq from "groq-sdk";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
+function getWeekStart(): string {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(now.setDate(diff));
+  return monday.toISOString().split('T')[0];
+}
+
 export type EvaluationResult = {
   overallScore: number;
   technicalScore: number;
@@ -86,6 +94,11 @@ async function saveInterviewSession(
   if (error) {
     console.error("Failed to save interview session:", error);
   }
+
+  await supabase.rpc('increment_session_count', {
+    p_user_id: userId,
+    p_week_start: getWeekStart(),
+  });
 }
 
 export async function POST(request: Request) {

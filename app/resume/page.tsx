@@ -99,6 +99,9 @@ export default function ResumePage() {
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [analysis, setAnalysis] = useState<ResumeAnalysisResult | null>(null);
+  const [resumeText, setResumeText] = useState<string | null>(null);
+  const [fixData, setFixData] = useState<any>(null);
+  const [fixing, setFixing] = useState(false);
 
   const validateAndSetFile = useCallback((selected: File | null) => {
     if (!selected) return;
@@ -149,6 +152,8 @@ export default function ResumePage() {
         throw new Error(extractData.error || "Failed to extract PDF text.");
       }
 
+      setResumeText(extractData.text);
+
       const analyzeRes = await fetch("/api/analyze-resume", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -161,6 +166,9 @@ export default function ResumePage() {
       const analyzeData = await analyzeRes.json();
 
       if (!analyzeRes.ok) {
+        if (analyzeRes.status === 400 && analyzeData.error === "Invalid document") {
+          throw new Error("⚠️ Please upload a valid resume. The file you uploaded doesn't look like a resume.");
+        }
         throw new Error(analyzeData.error || "Resume analysis failed.");
       }
 
@@ -177,8 +185,38 @@ export default function ResumePage() {
     setStep("upload");
     setFile(null);
     setAnalysis(null);
+    setResumeText(null);
+    setFixData(null);
     setError(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+  async function handleFixResume() {
+    if (!resumeText || !analysis) return;
+    
+    setFixing(true);
+    try {
+      const res = await fetch("/api/fix-resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resumeText,
+          role: targetRole,
+          company: targetCompany,
+          issues: analysis.issuesFound,
+          improvements: analysis.suggestions,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to fix resume.");
+      
+      setFixData(data);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to fix resume. Please try again.");
+    } finally {
+      setFixing(false);
+    }
   }
 
   return (
@@ -420,6 +458,91 @@ export default function ResumePage() {
                 ))}
               </ol>
             </div>
+
+            {/* Fix Resume Button */}
+            <div className="mt-8 flex flex-col items-center">
+              {!fixData && !fixing && (
+                <button
+                  type="button"
+                  onClick={handleFixResume}
+                  className="rounded-xl bg-[#00C853] px-8 py-3 text-base font-bold text-black transition-colors hover:bg-[#00b34a] shadow-lg shadow-[#00C853]/20"
+                >
+                  ✨ Fix My Resume with AI
+                </button>
+              )}
+              {fixing && (
+                <p className="text-center font-medium text-[#00C853]">
+                  🔄 AI is rewriting your resume...
+                </p>
+              )}
+            </div>
+
+            {/* Fix Data Results */}
+            {fixData && (
+              <div className="mt-8 space-y-6">
+                {/* Section A — Professional Summary */}
+                <div className="relative rounded-2xl border border-zinc-800 border-l-4 border-l-[#00C853] bg-zinc-900/40 p-6">
+                  <h3 className="text-lg font-semibold text-white">✅ Rewritten Professional Summary</h3>
+                  <p className="mt-3 leading-relaxed text-zinc-300">{fixData.professionalSummary}</p>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(fixData.professionalSummary)}
+                    className="absolute right-6 top-6 rounded-lg bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-white"
+                  >
+                    Copy
+                  </button>
+                </div>
+
+                {/* Section B — Before & After Bullets */}
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+                  <h3 className="text-lg font-semibold text-white">📝 Rewritten Bullet Points</h3>
+                  <div className="mt-6 space-y-6">
+                    {fixData.beforeAfterBullets?.map((item: any, i: number) => (
+                      <div key={i} className="space-y-3">
+                        <h4 className="text-sm font-semibold text-[#00C853]">{item.section}</h4>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4">
+                            <p className="mb-2 text-xs font-medium uppercase text-red-400">Before</p>
+                            <p className="text-sm text-red-400 line-through opacity-80">{item.before}</p>
+                          </div>
+                          <div className="rounded-xl border border-[#00C853]/20 bg-[#00C853]/10 p-4">
+                            <p className="mb-2 text-xs font-medium uppercase text-[#00C853]">After</p>
+                            <p className="text-sm font-medium text-[#00C853]">{item.after}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Section C — Skills To Add */}
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+                  <h3 className="text-lg font-semibold text-white">🎯 Add These Skills to Your Resume</h3>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {fixData.skillsToAdd?.map((skill: string) => (
+                      <span
+                        key={skill}
+                        className="rounded-lg border border-[#00C853]/30 bg-[#00C853]/10 px-3 py-1 text-sm font-medium text-[#00C853]"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Section D — Quick Wins */}
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+                  <h3 className="text-lg font-semibold text-white">⚡ Quick Wins</h3>
+                  <ul className="mt-4 space-y-3">
+                    {fixData.quickWins?.map((win: string, i: number) => (
+                      <li key={i} className="flex gap-3 text-sm text-zinc-300">
+                        <span className="shrink-0">✅</span>
+                        <span>{win}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">

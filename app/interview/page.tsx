@@ -186,6 +186,8 @@ export default function InterviewPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [sessionsUsed, setSessionsUsed] = useState(0);
   const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [sessionInfo, setSessionInfo] = useState<any>(null);
+  const [checkingLimit, setCheckingLimit] = useState(true);
 
   const questions = useMemo(() => mockQuestions[interviewType], [interviewType]);
   const currentQuestion = questions[questionIndex];
@@ -195,7 +197,7 @@ export default function InterviewPage() {
       ? ((questionIndex + (evaluating ? 0 : 0)) / TOTAL_QUESTIONS) * 100
       : 100;
 
-  const sessionLimitReached = sessionsUsed >= FREE_SESSION_LIMIT;
+  const sessionLimitReached = sessionInfo ? !sessionInfo.canStart : false;
 
   useEffect(() => {
     const supabase = createClient();
@@ -203,6 +205,32 @@ export default function InterviewPage() {
       setUserId(user?.id ?? null);
     });
   }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+    let isMounted = true;
+    async function checkLimit() {
+      setCheckingLimit(true);
+      try {
+        const authHeaders = await getSessionAuthHeaders();
+        const res = await fetch("/api/session-limit", {
+          credentials: "include",
+          headers: authHeaders,
+        });
+        const data = await res.json();
+        if (isMounted) {
+          setSessionInfo(data);
+          setSessionsUsed(data.sessions_used ?? 0);
+          setCheckingLimit(false);
+        }
+      } catch (err) {
+        console.error("Failed to fetch session limit", err);
+        if (isMounted) setCheckingLimit(false);
+      }
+    }
+    checkLimit();
+    return () => { isMounted = false; };
+  }, [userId]);
 
   async function getSessionAuthHeaders(): Promise<HeadersInit> {
     const supabase = createClient();
@@ -221,15 +249,16 @@ export default function InterviewPage() {
     setSessionsLoading(true);
     try {
       const authHeaders = await getSessionAuthHeaders();
-      const res = await fetch("/api/sessions", {
+      const res = await fetch("/api/session-limit", {
         credentials: "include",
         headers: authHeaders,
       });
       const data = await res.json();
-      console.log("GET /api/sessions response:", res.status, data);
+      console.log("GET /api/session-limit response:", res.status, data);
 
       if (res.ok) {
-        setSessionsUsed(data.sessionsUsed ?? 0);
+        setSessionsUsed(data.sessions_used ?? 0);
+        setSessionInfo(data);
       }
     } catch (err) {
       console.error("Failed to fetch session usage:", err);
@@ -288,20 +317,24 @@ export default function InterviewPage() {
   async function incrementSessionUsage() {
     try {
       const authHeaders = await getSessionAuthHeaders();
-      const res = await fetch("/api/sessions", {
+      const res = await fetch("/api/session-limit", {
         method: "POST",
         credentials: "include",
-        headers: authHeaders,
+        headers: {
+          ...authHeaders,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId }),
       });
       const data = await res.json();
-      console.log("POST /api/sessions response:", res.status, data);
+      console.log("POST /api/session-limit response:", res.status, data);
 
       if (!res.ok) {
         console.error("Session increment failed:", data);
         return;
       }
 
-      setSessionsUsed(data.sessionsUsed ?? 0);
+      setSessionsUsed(data.sessions_used ?? 0);
       await fetchSessionUsage();
     } catch (err) {
       console.error("Failed to increment session usage:", err);
@@ -533,14 +566,41 @@ export default function InterviewPage() {
                   />
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleStartInterview}
-                  disabled={sessionLimitReached || sessionsLoading}
-                  className="w-full rounded-xl bg-[#00C853] py-4 text-base font-semibold text-black transition-colors hover:bg-[#00b34a] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  Start Interview
-                </button>
+                {checkingLimit ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="w-full rounded-xl bg-[#00C853] py-4 text-base font-semibold text-black transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Checking availability...
+                  </button>
+                ) : sessionInfo?.canStart === false ? (
+                  <div className="rounded-xl border border-red-500/30 bg-zinc-900 p-5 text-center">
+                    <div className="mb-2 text-2xl">🚫</div>
+                    <h3 className="mb-2 font-bold text-white">Weekly Limit Reached</h3>
+                    <p className="mb-4 text-sm text-zinc-300">
+                      You've used all 3 free sessions this week. Resets every Monday.
+                    </p>
+                    <Link
+                      href="/pricing"
+                      className="inline-block rounded-lg bg-[#00C853] px-6 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-[#00b34a]"
+                    >
+                      Upgrade Now
+                    </Link>
+                    <p className="mt-3 text-xs text-zinc-500">
+                      Or wait until Monday for your free sessions to reset.
+                    </p>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleStartInterview}
+                    disabled={sessionLimitReached || sessionsLoading}
+                    className="w-full rounded-xl bg-[#00C853] py-4 text-base font-semibold text-black transition-colors hover:bg-[#00b34a] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Start Interview
+                  </button>
+                )}
               </div>
             </div>
           </div>
