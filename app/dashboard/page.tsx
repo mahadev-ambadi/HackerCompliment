@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import LogoutButton from "@/components/LogoutButton";
+import ProfileDropdown from "@/components/ProfileDropdown";
 import SessionTracker from "@/components/SessionTracker";
 import { createClient } from "@/lib/supabase/server";
 
@@ -46,7 +46,7 @@ function formatDate(dateStr: string) {
 function getScoreColor(score: number) {
   if (score < 50) return "text-red-400";
   if (score < 70) return "text-yellow-400";
-  return "text-[#00C853]";
+  return "text-[#FF6B2B]";
 }
 
 export default async function DashboardPage() {
@@ -72,15 +72,35 @@ export default async function DashboardPage() {
     user.email?.split("@")[0] ||
     "there";
 
+  const initials = displayName
+    .split(" ")
+    .map((n: string) => n[0])
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
+
+  const { data: purchaseData } = await supabase
+    .from("purchases")
+    .select("plan")
+    .order("created_at", { ascending: false })
+    .limit(1);
+    
+  const plan = purchaseData && purchaseData.length > 0 ? purchaseData[0].plan : "Free";
+
   return (
     <div className="min-h-full bg-[#09090b]">
       <header className="border-b border-zinc-800">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link href="/" className="text-lg font-bold tracking-tight">
-            <span className="text-[#00C853]">Hacker</span>
+            <span className="text-[#FF6B2B]">Hacker</span>
             <span className="text-white">Compliment</span>
           </Link>
-          <LogoutButton />
+          <ProfileDropdown 
+            name={displayName} 
+            email={user.email || ""} 
+            initials={initials} 
+            plan={plan} 
+          />
         </div>
       </header>
 
@@ -94,10 +114,10 @@ export default async function DashboardPage() {
               Ready to practice for your dream company interview?
             </p>
           </div>
-          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#00C853]/30 bg-[#00C853]/10 px-4 py-2 text-sm font-medium text-[#00C853]">
+          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#FF6B2B]/30 bg-[#FF6B2B]/10 px-4 py-2 text-sm font-medium text-[#FF6B2B]">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00C853] opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#00C853]" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#FF6B2B] opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#FF6B2B]" />
             </span>
             3 free sessions this week
           </span>
@@ -109,7 +129,7 @@ export default async function DashboardPage() {
               <h2 className="text-lg font-semibold text-white">Recent Interviews</h2>
               <Link
                 href="/history"
-                className="text-sm font-medium text-[#00C853] hover:text-[#00b34a]"
+                className="text-sm font-medium text-[#FF6B2B] hover:text-[#FF6B2B]"
               >
                 View All →
               </Link>
@@ -126,7 +146,7 @@ export default async function DashboardPage() {
                   <Link
                     key={session.id}
                     href="/history"
-                    className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-800/30 px-4 py-3 transition-colors hover:border-[#00C853]/30"
+                    className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-800/30 px-4 py-3 transition-colors hover:border-[#FF6B2B]/30"
                   >
                     <div>
                       <p className="font-medium text-white">
@@ -164,8 +184,8 @@ export default async function DashboardPage() {
                 href={card.href}
                 className={`mt-6 block w-full rounded-xl py-3 text-center text-sm font-semibold transition-colors ${
                   card.primary
-                    ? "bg-[#00C853] text-black hover:bg-[#00b34a]"
-                    : "border border-zinc-700 text-white hover:border-[#00C853]/50 hover:bg-zinc-800"
+                    ? "bg-[#FF6B2B] text-black transition-all duration-200 hover:scale-105 hover:brightness-110"
+                    : "border border-zinc-700 text-white hover:border-[#FF6B2B]/50 hover:bg-zinc-800"
                 }`}
               >
                 {card.label}

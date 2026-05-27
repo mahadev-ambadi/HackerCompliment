@@ -20,8 +20,8 @@ export default function SessionTracker({ userId }: { userId: string }) {
   const { sessions_used = 0, bonus_credits = 0, limit = 3, remaining = 0, canStart = false } = sessionInfo;
   const percentage = Math.min(100, (sessions_used / limit) * 100);
 
-  let colorClass = "text-[#00C853]";
-  let bgClass = "bg-[#00C853]";
+  let colorClass = "text-[#FF6B2B]";
+  let bgClass = "bg-[#FF6B2B]";
   
   if (remaining === 0) {
     colorClass = "text-red-500";
@@ -38,7 +38,7 @@ export default function SessionTracker({ userId }: { userId: string }) {
       {isUnlimited ? (
         <div className="flex items-center justify-between">
           <span className="text-sm text-zinc-400">Session Access</span>
-          <span className="inline-flex items-center rounded-full bg-[#00C853]/10 px-3 py-1 text-xs font-semibold text-[#00C853] border border-[#00C853]/30">
+          <span className="inline-flex items-center rounded-full bg-[#FF6B2B]/10 px-3 py-1 text-xs font-semibold text-[#FF6B2B] border border-[#FF6B2B]/30">
             Unlimited Access
           </span>
         </div>
@@ -58,7 +58,7 @@ export default function SessionTracker({ userId }: { userId: string }) {
           </div>
           <div>
             {remaining === 0 ? (
-              <Link href="/pricing" className="text-xs text-[#00C853] hover:underline">
+              <Link href="/pricing" className="text-xs text-[#FF6B2B] hover:underline">
                 Limit reached. Resets Monday. Upgrade for unlimited →
               </Link>
             ) : (

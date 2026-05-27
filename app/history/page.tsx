@@ -29,7 +29,7 @@ type SortOption = "newest" | "highest" | "lowest";
 function getScoreColor(score: number) {
   if (score < 50) return "text-red-400";
   if (score < 70) return "text-yellow-400";
-  return "text-[#00C853]";
+  return "text-[#FF6B2B]";
 }
 
 function formatDate(dateStr: string) {
@@ -46,7 +46,7 @@ function formatDuration(seconds: number) {
 }
 
 const selectClass =
-  "rounded-xl border border-zinc-700 bg-zinc-800/50 px-3 py-2 text-sm text-white outline-none focus:border-[#00C853]/50";
+  "rounded-xl border border-zinc-700 bg-zinc-800/50 px-3 py-2 text-sm text-white outline-none focus:border-[#FF6B2B]/50";
 
 export default function HistoryPage() {
   const [sessions, setSessions] = useState<InterviewSession[]>([]);
@@ -173,7 +173,7 @@ export default function HistoryPage() {
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         {loading && (
           <div className="flex flex-col items-center justify-center py-24">
-            <span className="h-10 w-10 animate-spin rounded-full border-2 border-[#00C853]/30 border-t-[#00C853]" />
+            <span className="h-10 w-10 animate-spin rounded-full border-2 border-[#FF6B2B]/30 border-t-[#FF6B2B]" />
             <p className="mt-4 text-sm text-zinc-400">Loading your interview history...</p>
           </div>
         )}
@@ -194,7 +194,7 @@ export default function HistoryPage() {
             <p className="mt-2 text-zinc-400">Start your first mock interview</p>
             <Link
               href="/interview"
-              className="mt-6 rounded-xl bg-[#00C853] px-8 py-3 text-sm font-semibold text-black hover:bg-[#00b34a]"
+              className="mt-6 rounded-xl bg-[#FF6B2B] px-8 py-3 text-sm font-semibold text-black transition-all duration-200 hover:scale-105 hover:brightness-110"
             >
               Start Interview
             </Link>
@@ -232,7 +232,7 @@ export default function HistoryPage() {
                             ? "border-red-500/30 bg-red-500/10 text-red-400"
                             : score < 70
                               ? "border-yellow-500/30 bg-yellow-500/10 text-yellow-400"
-                              : "border-[#00C853]/30 bg-[#00C853]/10 text-[#00C853]"
+                              : "border-[#FF6B2B]/30 bg-[#FF6B2B]/10 text-[#FF6B2B]"
                         }`}
                       >
                         {score}
@@ -331,7 +331,7 @@ export default function HistoryPage() {
                           <span
                             className={`rounded-full border px-3 py-1 text-xs font-semibold ${
                               session.would_recommend
-                                ? "border-[#00C853]/30 bg-[#00C853]/10 text-[#00C853]"
+                                ? "border-[#FF6B2B]/30 bg-[#FF6B2B]/10 text-[#FF6B2B]"
                                 : "border-red-500/30 bg-red-500/10 text-red-400"
                             }`}
                           >
@@ -364,7 +364,7 @@ export default function HistoryPage() {
                         onClick={() =>
                           setExpandedId(isExpanded ? null : session.id)
                         }
-                        className="mt-4 text-sm font-medium text-[#00C853] hover:text-[#00b34a]"
+                        className="mt-4 text-sm font-medium text-[#FF6B2B] hover:text-[#FF6B2B]"
                       >
                         {isExpanded ? "Hide Details" : "View Details"}
                       </button>
@@ -373,14 +373,14 @@ export default function HistoryPage() {
                         <div className="mt-4 border-t border-zinc-800 pt-4">
                           <div className="grid gap-6 sm:grid-cols-2">
                             <div>
-                              <h4 className="font-semibold text-[#00C853]">Strengths</h4>
+                              <h4 className="font-semibold text-[#FF6B2B]">Strengths</h4>
                               <ul className="mt-3 space-y-2">
                                 {(session.strengths ?? []).map((item) => (
                                   <li
                                     key={item}
                                     className="flex gap-2 text-sm text-zinc-300"
                                   >
-                                    <span className="text-[#00C853]">•</span>
+                                    <span className="text-[#FF6B2B]">•</span>
                                     {item}
                                   </li>
                                 ))}
@@ -408,7 +408,7 @@ export default function HistoryPage() {
                           )}
                           <Link
                             href="/interview"
-                            className="mt-4 inline-block rounded-xl bg-[#00C853] px-6 py-2.5 text-sm font-semibold text-black hover:bg-[#00b34a]"
+                            className="mt-4 inline-block rounded-xl bg-[#FF6B2B] px-6 py-2.5 text-sm font-semibold text-black transition-all duration-200 hover:scale-105 hover:brightness-110"
                           >
                             Practice This Again
                           </Link>

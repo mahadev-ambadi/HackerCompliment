@@ -13,6 +13,7 @@ export type ResumeAnalysisResult = {
   suggestions: string[];
   verdict: string;
   rating?: string;
+  sectionScores?: Record<string, number>;
 };
 
 const groq = new Groq({
@@ -93,11 +94,35 @@ function parseAnalysis(raw: Record<string, unknown>): ResumeAnalysisResult {
     issuesFound: parseStringArray(raw.issuesFound ?? raw.issues),
     suggestions: parseStringArray(raw.suggestions),
     verdict: typeof raw.verdict === "string" ? raw.verdict : (typeof raw.summary === "string" ? raw.summary : ""),
+    sectionScores: typeof raw.sectionScores === "object" ? (raw.sectionScores as Record<string, number>) : undefined,
   };
 }
 
 export async function POST(request: Request) {
   try {
+    const contentType = request.headers.get('content-type') || '';
+    
+    let extractedText = '';
+    let targetRole = 'Software Engineer';
+    let targetCompany = 'TCS';
+    let skipValidation = false;
+
+    if (contentType.includes('application/json')) {
+      // Re-analyze flow — text already extracted and validated before
+      const body = await request.json();
+      extractedText = body.resumeText;
+      targetRole = body.targetRole || body.role || targetRole;
+      targetCompany = body.targetCompany || body.company || targetCompany;
+      skipValidation = true; // Skip isLikelyResume check
+      console.log("Re-analyze text preview:", extractedText?.substring(0, 300));
+    } else {
+      // File upload flow — existing FormData logic (fallback)
+      const body = await request.json().catch(() => ({}));
+      extractedText = body.resumeText || "";
+      targetRole = body.targetRole || targetRole;
+      targetCompany = body.targetCompany || targetCompany;
+    }
+
     if (!process.env.GROQ_API_KEY) {
       return NextResponse.json(
         { error: "Groq API key is not configured." },
@@ -105,33 +130,32 @@ export async function POST(request: Request) {
       );
     }
 
-    const { resumeText, targetRole, targetCompany } = await request.json();
-
-    if (!resumeText || !targetRole || !targetCompany) {
+    if (!extractedText || !targetRole || !targetCompany) {
       return NextResponse.json(
         { error: "Missing required analysis parameters." },
         { status: 400 }
       );
     }
 
-    if (typeof resumeText !== "string" || resumeText.trim().length < 50) {
-      return NextResponse.json(
-        { error: "Resume text is too short to analyze." },
-        { status: 400 }
-      );
+    if (!extractedText || extractedText.trim().length < 50) {
+      return NextResponse.json({ 
+        error: "Resume text too short or empty" 
+      }, { status: 400 })
     }
 
-    console.log("Extracted text preview:", resumeText?.substring(0, 200));
-    console.log("Is resume check:", isLikelyResume(resumeText));
+    if (!skipValidation) {
+      console.log("Extracted text preview:", extractedText?.substring(0, 200));
+      console.log("Is resume check:", isLikelyResume(extractedText));
 
-    if (!isLikelyResume(resumeText)) {
-      return NextResponse.json(
-        { 
-          error: "Invalid document", 
-          message: "The uploaded file does not appear to be a resume. Please upload your actual resume PDF." 
-        }, 
-        { status: 400 }
-      )
+      if (!isLikelyResume(extractedText)) {
+        return NextResponse.json(
+          { 
+            error: "Invalid document", 
+            message: "The uploaded file does not appear to be a resume. Please upload your actual resume PDF." 
+          }, 
+          { status: 400 }
+        );
+      }
     }
 
     const completion = await groq.chat.completions.create({
@@ -139,103 +163,104 @@ export async function POST(request: Request) {
       messages: [
         {
           role: "system",
-          content: `You are a strict ATS (Applicant Tracking System) evaluator with 10+ years experience 
-screening resumes for top Indian companies like TCS, Infosys, Wipro, Amazon, Google.
+          content: `You are a brutally honest ATS scanner and resume expert. 
+You MUST give different scores every time based on actual content.
+NEVER round to 80, 82, or 85. Be precise — use scores like 67, 73, 44, 91.
+You evaluate 6 specific sections of a resume.`
+        },
+        {
+          role: "user",
+          content: `Evaluate this resume for ${targetRole} at ${targetCompany}.
 
-You must evaluate resumes CRITICALLY and HONESTLY. Do NOT give inflated scores.
+RESUME TEXT:
+${extractedText.slice(0, 12000)}
 
-Scoring rules:
-- Fresh graduate with no internship = overall max 55
-- 1 project only = overall max 50
-- Missing contact info = deduct 15 points
-- Poor formatting = max 60 for formatting
-- Missing keywords for the role = max 50 for keywords
-- No quantified achievements = deduct 10 points
-- Strong internship experience = can score 70-85
-- Multiple projects with good descriptions = can score 65-75
+STEP 1 - Audit each section (answer honestly):
 
-You must return ONLY a valid JSON object, no markdown, no explanation:
+CONTACT SECTION:
+- Has phone number? (yes/no)
+- Has email? (yes/no)
+- Has LinkedIn? (yes/no)
+- Has GitHub/Portfolio? (yes/no) — important for tech roles
+- Has location/city? (yes/no)
+Contact score: 20 points max. Each missing item = -4 points.
+
+PROFESSIONAL SUMMARY:
+- Has a summary/objective? (yes/no)
+- Is it role-specific for ${targetRole}? (yes/no)
+- Is it 2-4 lines? (yes/no)
+Summary score: 15 points max. Missing = 0. Generic = 5. Role-specific = 15.
+
+SKILLS:
+- Lists relevant technical skills for ${targetRole}? (yes/no)
+- Has 5+ skills? (yes/no)
+- Skills match ${targetCompany} requirements? (yes/no)
+- Has soft skills? (yes/no)
+Skills score: 20 points max.
+
+WORK HISTORY / EXPERIENCE:
+- Has internships? (count: 0/1/2+)
+- Has work experience? (yes/no)
+- Uses action verbs? (yes/no)
+- Has quantified achievements with numbers/metrics? (yes/no)
+- Experience relevant to ${targetRole}? (yes/no)
+Work score: 25 points max. 0 internships = max 10. 1 = max 18. 2+ = max 25.
+
+EDUCATION:
+- Has degree listed? (yes/no)
+- Has CGPA/GPA? (yes/no)
+- CGPA above 7.5? (yes/no)
+- Has certifications? (yes/no)
+- Has relevant coursework? (yes/no)
+Education score: 10 points max.
+
+FORMATTING & READABILITY:
+- Clear section headers? (yes/no)
+- Consistent formatting? (yes/no)
+- Appropriate length (1-2 pages)? (yes/no)
+- No spelling errors apparent? (yes/no)
+Formatting score: 10 points max.
+
+STEP 2 - Calculate:
+atsScore = Contact + Summary + Skills + Work + Education + Formatting
+(This must be the SUM of all section scores — do NOT inflate it)
+
+Company difficulty adjustment:
+- Google, Amazon, Microsoft, Meta, Apple: subtract 8
+- Flipkart, Swiggy, Zomato, Paytm: subtract 4
+- TCS, Wipro, Infosys, Cognizant, HCL: no adjustment
+- Deloitte, Accenture, Capgemini: subtract 2
+
+STEP 3 - Return ONLY this JSON (no markdown):
 {
-  "atsScore": number 0-100 (be strict and realistic),
+  "atsScore": calculated sum above (integer, NOT rounded to 80/82/85),
+  "sectionScores": {
+    "contact": number out of 20,
+    "professionalSummary": number out of 15,
+    "skills": number out of 20,
+    "workHistory": number out of 25,
+    "education": number out of 10,
+    "formatting": number out of 10
+  },
   "keywordsMatch": number 0-100,
   "formatting": number 0-100,
   "readability": number 0-100,
   "relevance": number 0-100,
   "rating": "Poor" | "Needs Work" | "Average" | "Good" | "Excellent",
-  "summary": "2 sentence honest assessment",
-  "keywordsFound": ["keyword1", "keyword2"],
-  "missingKeywords": ["keyword1", "keyword2"],
-  "issues": ["specific issue 1", "specific issue 2", "specific issue 3"],
-  "suggestions": ["specific fix 1", "specific fix 2", "specific fix 3"]
-}
-
-Rating scale:
-0-40 = Poor
-41-55 = Needs Work  
-56-70 = Average
-71-84 = Good
-85-100 = Excellent`,
-        },
-        {
-          role: "user",
-          content: `You are evaluating a resume for the specific role of "${targetRole}" at "${targetCompany}".
-
-IMPORTANT: Your evaluation must be SPECIFIC to this role and company.
-Different roles need completely different skills and keywords.
-
-Role-specific requirements:
-- If role contains "software" or "developer" or "engineer": 
-  look for programming languages, frameworks, DSA, projects, GitHub
-- If role contains "data" or "analyst": 
-  look for Python, SQL, Excel, statistics, ML, data visualization
-- If role contains "design" or "UI" or "UX": 
-  look for Figma, Adobe XD, portfolio, design tools
-- If role contains "marketing" or "MBA" or "business": 
-  look for communication skills, internships, leadership, certifications
-- If role contains "HR" or "management": 
-  look for soft skills, communication, team experience, MBA
-
-Company-specific bar:
-- Google, Amazon, Microsoft, Meta = very high bar, score 10 points lower
-- TCS, Wipro, Infosys, Cognizant = moderate bar, standard scoring
-- Startup = look for versatility and project ownership
-
-RESUME TEXT:
-${resumeText.slice(0, 12000)}
-
-Count these before scoring:
-1. Phone number present? (yes/no)
-2. Email present? (yes/no)
-3. Number of internships: (count)
-4. Number of projects: (count)
-5. Quantified achievements (numbers/metrics)? (yes/no)
-6. Are the skills RELEVANT to ${targetRole}? (yes/no)
-7. CGPA if mentioned:
-
-Scoring based on what you found:
-- 0 internships + 0-1 projects = max 45
-- 0 internships + 2-3 projects = max 62
-- 1 internship = max 74
-- 2+ internships + quantified achievements + relevant skills = can score up to 95
-- Only truly exceptional resumes (IIT + Google internship + multiple products) = 95-100
-- Missing phone or email = subtract 10
-- Skills not relevant to ${targetRole} = subtract 15
-- No quantified achievements = subtract 8
-
-Return ONLY this JSON, no explanation:
-{
-  "atsScore": number,
-  "keywordsMatch": number,
-  "formatting": number,
-  "readability": number,
-  "relevance": number,
-  "rating": "Poor" | "Needs Work" | "Average" | "Good" | "Excellent",
-  "summary": "2 sentence assessment mentioning ${targetRole} at ${targetCompany} specifically",
-  "keywordsFound": ["only keywords relevant to ${targetRole}"],
-  "missingKeywords": ["important keywords for ${targetRole} at ${targetCompany} that are missing"],
-  "issues": ["specific issue 1", "specific issue 2", "specific issue 3"],
-  "suggestions": ["specific fix for ${targetRole} at ${targetCompany}"]
-}`,
+  "summary": "2 sentence specific assessment mentioning actual gaps found",
+  "keywordsFound": ["only keywords actually present in the resume text"],
+  "missingKeywords": ["important keywords for ${targetRole} at ${targetCompany} missing from resume"],
+  "issues": [
+    "specific issue found in contact section",
+    "specific issue found in experience section", 
+    "specific issue found in skills section"
+  ],
+  "suggestions": [
+    "specific actionable fix 1",
+    "specific actionable fix 2",
+    "specific actionable fix 3"
+  ]
+}`
         },
       ],
       temperature: 0.3,
@@ -258,25 +283,20 @@ Return ONLY this JSON, no explanation:
 
     const analysis = parseAnalysis(JSON.parse(cleanJson) as Record<string, unknown>);
 
-    // Fix inconsistent scores
-    if (analysis.keywordsScore === 0 || analysis.keywordsFound?.length === 0) {
-      analysis.atsScore = Math.min(analysis.atsScore, 30);
-      analysis.relevanceScore = Math.min(analysis.relevanceScore, 25);
+    const s = analysis.sectionScores;
+    if (s) {
+      const realScore = (s.contact || 0) + (s.professionalSummary || 0) + 
+        (s.skills || 0) + (s.workHistory || 0) + 
+        (s.education || 0) + (s.formatting || 0);
+      // Use the lower of AI score or calculated score
+      analysis.atsScore = Math.min(analysis.atsScore, realScore);
     }
 
-    // Overall score cannot be higher than average of all sub-scores
-    const avgScore = Math.round(
-      (analysis.keywordsScore + analysis.formattingScore + analysis.readabilityScore + analysis.relevanceScore) / 4
-    );
-    if (analysis.atsScore > avgScore + 10) {
-      analysis.atsScore = avgScore;
-    }
-
-    // Fix rating to match atsScore
-    if (analysis.atsScore <= 40) analysis.rating = "Poor";
-    else if (analysis.atsScore <= 55) analysis.rating = "Needs Work";
-    else if (analysis.atsScore <= 70) analysis.rating = "Average";
-    else if (analysis.atsScore <= 84) analysis.rating = "Good";
+    // Rating recalculation
+    if (analysis.atsScore <= 35) analysis.rating = "Poor";
+    else if (analysis.atsScore <= 50) analysis.rating = "Needs Work";
+    else if (analysis.atsScore <= 65) analysis.rating = "Average";
+    else if (analysis.atsScore <= 79) analysis.rating = "Good";
     else analysis.rating = "Excellent";
 
     return NextResponse.json(analysis);

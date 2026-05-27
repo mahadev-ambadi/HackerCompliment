@@ -35,13 +35,13 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024;
 function getScoreColor(score: number) {
   if (score < 50) return "text-red-400";
   if (score < 70) return "text-yellow-400";
-  return "text-[#00C853]";
+  return "text-[#FF6B2B]";
 }
 
 function getScoreStroke(score: number) {
   if (score < 50) return "stroke-red-400";
   if (score < 70) return "stroke-yellow-400";
-  return "stroke-[#00C853]";
+  return "stroke-[#FF6B2B]";
 }
 
 function getVerdictLabel(score: number) {
@@ -87,7 +87,7 @@ function CircularScore({ score }: { score: number }) {
 }
 
 const selectClass =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-800/50 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#00C853]/50 focus:ring-1 focus:ring-[#00C853]/30 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3E%3Cpath stroke=%27%239ca3af%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27m6 8 4 4 4-4%27/%3E%3C/svg%3E')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10";
+  "w-full rounded-xl border border-zinc-700 bg-zinc-800/50 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#FF6B2B]/50 focus:ring-1 focus:ring-[#FF6B2B]/30 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3E%3Cpath stroke=%27%239ca3af%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27m6 8 4 4 4-4%27/%3E%3C/svg%3E')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10";
 
 export default function ResumePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -102,6 +102,18 @@ export default function ResumePage() {
   const [resumeText, setResumeText] = useState<string | null>(null);
   const [fixData, setFixData] = useState<any>(null);
   const [fixing, setFixing] = useState(false);
+  const [rebuiltResumeText, setRebuiltResumeText] = useState("");
+  const [previousScore, setPreviousScore] = useState<number | null>(null);
+  const [reanalyzing, setReanalyzing] = useState(false);
+  const resultsRef = useRef<HTMLDivElement>(null);
+  
+  const [activeTab, setActiveTab] = useState<'analyze' | 'jdmatch'>('analyze');
+  const [jdInputType, setJdInputType] = useState<'paste' | 'upload'>('paste');
+  const [jdText, setJdText] = useState('');
+  const [jdFile, setJdFile] = useState<File | null>(null);
+  const [jdMatchData, setJdMatchData] = useState<any>(null);
+  const [jdMatching, setJdMatching] = useState(false);
+  const jdFileInputRef = useRef<HTMLInputElement>(null);
 
   const validateAndSetFile = useCallback((selected: File | null) => {
     if (!selected) return;
@@ -121,12 +133,38 @@ export default function ResumePage() {
 
     setFile(selected);
     setError(null);
+    setFixData(null);
+    setRebuiltResumeText("");
+    setPreviousScore(null);
   }, []);
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     setIsDragging(false);
     validateAndSetFile(e.dataTransfer.files[0] ?? null);
+  }
+
+  const validateAndSetJdFile = useCallback((selected: File | null) => {
+    if (!selected) return;
+    if (
+      selected.type !== "application/pdf" &&
+      !selected.name.toLowerCase().endsWith(".pdf")
+    ) {
+      setError("Please upload a JD PDF file.");
+      return;
+    }
+    if (selected.size > MAX_FILE_SIZE) {
+      setError("File size exceeds 5MB limit.");
+      return;
+    }
+    setJdFile(selected);
+    setError(null);
+  }, []);
+
+  function handleJdDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setIsDragging(false); // Can share isDragging state or separate it, will use a quick inline for JD if needed, but here we just process the drop
+    validateAndSetJdFile(e.dataTransfer.files[0] ?? null);
   }
 
   async function handleAnalyze() {
@@ -183,12 +221,90 @@ export default function ResumePage() {
 
   function handleAnalyzeAnother() {
     setStep("upload");
-    setFile(null);
     setAnalysis(null);
-    setResumeText(null);
+    setFile(null);
     setFixData(null);
-    setError(null);
+    setRebuiltResumeText('');
+    setPreviousScore(null);
+    setTargetRole('Software Engineer');
+    setTargetCompany('TCS');
+    
+    // Reset file input
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (jdFileInputRef.current) jdFileInputRef.current.value = "";
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function handleJDMatch() {
+    if (!file) {
+      setError("Please upload your resume PDF first.");
+      return;
+    }
+    
+    if (jdInputType === 'paste' && (!jdText || jdText.trim().length < 20)) {
+      setError("Please paste a valid job description.");
+      return;
+    }
+
+    if (jdInputType === 'upload' && !jdFile) {
+      setError("Please upload a JD PDF.");
+      return;
+    }
+
+    setJdMatching(true);
+    setError(null);
+
+    try {
+      let finalResumeText = resumeText;
+      if (!finalResumeText) {
+        const extractForm = new FormData();
+        extractForm.append("resume", file);
+        const extractRes = await fetch("/api/extract-pdf", {
+          method: "POST",
+          body: extractForm,
+        });
+        const extractData = await extractRes.json();
+        if (!extractRes.ok) throw new Error(extractData.error || "Failed to extract Resume text.");
+        finalResumeText = extractData.text;
+        setResumeText(finalResumeText);
+      }
+
+      let finalJdText = jdText;
+      if (jdInputType === 'upload' && jdFile) {
+        const jdForm = new FormData();
+        jdForm.append("resume", jdFile); 
+        const extractJdRes = await fetch("/api/extract-pdf", {
+          method: "POST",
+          body: jdForm,
+        });
+        const extractJdData = await extractJdRes.json();
+        if (!extractJdRes.ok) throw new Error(extractJdData.error || "Failed to extract JD text.");
+        finalJdText = extractJdData.text;
+      }
+
+      const matchRes = await fetch("/api/match-jd", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resumeText: finalResumeText,
+          jdText: finalJdText,
+        }),
+      });
+
+      const matchData = await matchRes.json();
+      if (!matchRes.ok) throw new Error(matchData.error || "JD Match failed.");
+
+      setJdMatchData(matchData);
+      setStep("results");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Match failed. Please retry.");
+    } finally {
+      setJdMatching(false);
+    }
   }
   async function handleFixResume() {
     if (!resumeText || !analysis) return;
@@ -219,12 +335,95 @@ export default function ResumePage() {
     }
   }
 
+  async function handleApplyFixes() {
+    if (!fixData || !resumeText || !analysis) return;
+
+    const rebuiltResume = `
+CONTACT
+${resumeText.match(/[\w.]+@[\w.]+/)?.[0] || ''}
+${resumeText.match(/\+?[\d\s\-]{10,}/)?.[0] || ''}
+
+PROFESSIONAL SUMMARY
+${fixData.professionalSummary}
+
+TECHNICAL SKILLS
+${fixData.skillsToAdd.join(', ')}
+
+EXPERIENCE & PROJECTS
+${fixData.beforeAfterBullets.map((b: any) => `${b.section}\n• ${b.after}`).join('\n\n')}
+
+EDUCATION
+${resumeText.split('\n').filter(line => 
+  line.toLowerCase().includes('university') ||
+  line.toLowerCase().includes('college') ||
+  line.toLowerCase().includes('b.tech') ||
+  line.toLowerCase().includes('gpa') ||
+  line.toLowerCase().includes('cgpa') ||
+  line.toLowerCase().includes('%')
+).join('\n')}
+
+CERTIFICATIONS
+${resumeText.split('\n').filter(line =>
+  line.toLowerCase().includes('certif') ||
+  line.toLowerCase().includes('aws') ||
+  line.toLowerCase().includes('cisco') ||
+  line.toLowerCase().includes('course')
+).join('\n')}
+
+ACHIEVEMENTS
+${resumeText.split('\n').filter(line =>
+  line.toLowerCase().includes('award') ||
+  line.toLowerCase().includes('honour') ||
+  line.toLowerCase().includes('achiev') ||
+  line.toLowerCase().includes('volunteer') ||
+  line.toLowerCase().includes('won') ||
+  line.toLowerCase().includes('rank')
+).join('\n')}
+`.trim();
+
+    setRebuiltResumeText(rebuiltResume);
+  }
+
+  async function handleReanalyze() {
+    if (!rebuiltResumeText) return;
+    
+    setReanalyzing(true);
+    setPreviousScore(analysis?.atsScore || null);
+    
+    try {
+      const analyzeRes = await fetch("/api/analyze-resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resumeText: rebuiltResumeText,
+          targetRole,
+          targetCompany,
+        }),
+      });
+      const analyzeData = await analyzeRes.json();
+
+      if (!analyzeRes.ok) {
+        throw new Error(analyzeData.error || "Re-analysis failed.");
+      }
+
+      setAnalysis(analyzeData as ResumeAnalysisResult);
+      if (resultsRef.current) {
+        resultsRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : "Re-analysis failed.");
+    } finally {
+      setReanalyzing(false);
+    }
+  }
+
   return (
     <div className="min-h-full bg-[#09090b]">
       <header className="border-b border-zinc-800">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/dashboard" className="text-lg font-bold tracking-tight">
-            <span className="text-[#00C853]">Hacker</span>
+            <span className="text-[#FF6B2B]">Hacker</span>
             <span className="text-white">Compliment</span>
           </Link>
           <span className="text-xs text-zinc-500 sm:text-sm">Resume Analyzer</span>
@@ -233,6 +432,33 @@ export default function ResumePage() {
 
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
         {step === "upload" && (
+          <div className="mb-8 flex justify-center">
+            <div className="flex gap-2 rounded-xl border border-zinc-800 bg-zinc-900/50 p-1">
+              <button
+                onClick={() => setActiveTab('analyze')}
+                className={`rounded-lg px-6 py-2 transition-colors ${
+                  activeTab === 'analyze'
+                    ? "bg-[#FF6B2B] font-bold text-black"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                📄 Resume Analyzer
+              </button>
+              <button
+                onClick={() => setActiveTab('jdmatch')}
+                className={`rounded-lg px-6 py-2 transition-colors ${
+                  activeTab === 'jdmatch'
+                    ? "bg-[#FF6B2B] font-bold text-black"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                🎯 JD Match
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === "upload" && activeTab === "analyze" && (
           <div className="transition-opacity duration-300">
             <div className="mb-8 text-center">
               <h1 className="text-3xl font-bold text-white sm:text-4xl">AI Resume Analyzer</h1>
@@ -257,7 +483,7 @@ export default function ResumePage() {
                 onDrop={handleDrop}
                 className={`flex flex-col items-center rounded-2xl border-2 border-dashed px-6 py-12 transition-colors ${
                   isDragging
-                    ? "border-[#00C853] bg-[#00C853]/5"
+                    ? "border-[#FF6B2B] bg-[#FF6B2B]/5"
                     : "border-zinc-700 bg-zinc-800/30"
                 }`}
               >
@@ -265,7 +491,7 @@ export default function ResumePage() {
                 <p className="mt-4 text-lg font-semibold text-white">Drop your resume here</p>
                 <p className="mt-1 text-sm text-zinc-500">Supports PDF files up to 5MB</p>
                 {file && (
-                  <p className="mt-3 rounded-lg bg-zinc-800 px-3 py-1.5 text-sm text-[#00C853]">
+                  <p className="mt-3 rounded-lg bg-zinc-800 px-3 py-1.5 text-sm text-[#FF6B2B]">
                     {file.name}
                   </p>
                 )}
@@ -280,7 +506,7 @@ export default function ResumePage() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={loading}
-                  className="mt-6 rounded-xl bg-[#00C853] px-6 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-[#00b34a] disabled:opacity-60"
+                  className="mt-6 rounded-xl bg-[#FF6B2B] px-6 py-2.5 text-sm font-semibold text-black transition-all duration-200 hover:scale-105 hover:brightness-110 disabled:opacity-60"
                 >
                   Click to browse
                 </button>
@@ -332,7 +558,7 @@ export default function ResumePage() {
                 type="button"
                 onClick={handleAnalyze}
                 disabled={loading || !file}
-                className="mt-6 w-full rounded-xl bg-[#00C853] py-4 text-base font-semibold text-black transition-colors hover:bg-[#00b34a] disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-6 w-full rounded-xl bg-[#FF6B2B] py-4 text-base font-semibold text-black transition-all duration-200 hover:scale-105 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-3">
@@ -347,11 +573,160 @@ export default function ResumePage() {
           </div>
         )}
 
-        {step === "results" && analysis && (
+        {step === "upload" && activeTab === "jdmatch" && (
           <div className="transition-opacity duration-300">
+            <div className="mb-8 text-center">
+              <h1 className="text-3xl font-bold text-white sm:text-4xl">JD Match</h1>
+              <p className="mt-2 text-zinc-400">
+                Compare your resume against a specific job description
+              </p>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Left: Resume Upload */}
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+                <h3 className="mb-4 text-lg font-semibold text-white">Upload Your Resume (PDF)</h3>
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragging(true);
+                  }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={handleDrop}
+                  className={`flex flex-col items-center rounded-2xl border-2 border-dashed px-6 py-8 transition-colors ${
+                    isDragging
+                      ? "border-[#FF6B2B] bg-[#FF6B2B]/5"
+                      : "border-zinc-700 bg-zinc-800/30"
+                  }`}
+                >
+                  <span className="text-4xl">📄</span>
+                  <p className="mt-4 font-semibold text-white">Drop your resume here</p>
+                  <p className="mt-1 text-xs text-zinc-500">Supports PDF files up to 5MB</p>
+                  {file && (
+                    <p className="mt-3 rounded-lg bg-zinc-800 px-3 py-1.5 text-sm text-[#FF6B2B]">
+                      {file.name}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={jdMatching}
+                    className="mt-6 rounded-xl bg-zinc-800 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-700"
+                  >
+                    Browse Files
+                  </button>
+                </div>
+              </div>
+
+              {/* Right: JD Input */}
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-white">Job Description</h3>
+                  <div className="flex gap-1 rounded-lg bg-zinc-800 p-1">
+                    <button
+                      onClick={() => setJdInputType('paste')}
+                      className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
+                        jdInputType === 'paste' ? 'bg-zinc-600 text-white' : 'text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      Paste
+                    </button>
+                    <button
+                      onClick={() => setJdInputType('upload')}
+                      className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
+                        jdInputType === 'upload' ? 'bg-zinc-600 text-white' : 'text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      Upload PDF
+                    </button>
+                  </div>
+                </div>
+
+                {jdInputType === 'paste' ? (
+                  <textarea
+                    value={jdText}
+                    onChange={(e) => setJdText(e.target.value)}
+                    placeholder="Paste the job description here..."
+                    className="h-[212px] w-full resize-none rounded-xl border border-zinc-700 bg-zinc-800/50 p-4 text-sm text-white outline-none transition-colors focus:border-[#FF6B2B]/50 focus:ring-1 focus:ring-[#FF6B2B]/30"
+                  />
+                ) : (
+                  <div
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={handleJdDrop}
+                    className="flex h-[212px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-zinc-700 bg-zinc-800/30 px-6 py-8"
+                  >
+                    <span className="text-4xl">📋</span>
+                    <p className="mt-4 font-semibold text-white">Drop JD PDF here</p>
+                    {jdFile && (
+                      <p className="mt-3 rounded-lg bg-zinc-800 px-3 py-1.5 text-sm text-[#FF6B2B]">
+                        {jdFile.name}
+                      </p>
+                    )}
+                    <input
+                      ref={jdFileInputRef}
+                      type="file"
+                      accept="application/pdf,.pdf"
+                      className="hidden"
+                      onChange={(e) => validateAndSetJdFile(e.target.files?.[0] ?? null)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => jdFileInputRef.current?.click()}
+                      className="mt-4 rounded-xl bg-zinc-800 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-700"
+                    >
+                      Browse Files
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {error && (
+              <div className="mt-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-center text-sm text-red-400">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={handleJDMatch}
+              disabled={jdMatching || !file || (jdInputType === 'paste' && !jdText) || (jdInputType === 'upload' && !jdFile)}
+              className="mt-6 w-full rounded-xl bg-[#FF6B2B] py-4 text-base font-bold text-black transition-all duration-200 hover:scale-105 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {jdMatching ? (
+                <span className="flex items-center justify-center gap-3">
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+                  Analyzing match...
+                </span>
+              ) : (
+                "Analyze Match"
+              )}
+            </button>
+          </div>
+        )}
+
+        {step === "results" && activeTab === "analyze" && analysis && (
+          <div ref={resultsRef} className="transition-opacity duration-300">
             {/* ATS Score Card */}
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 text-center">
               <CircularScore score={analysis.atsScore} />
+              {previousScore !== null && (
+                <div className="mt-4 flex justify-center">
+                  <span className={`inline-block rounded-full px-4 py-1.5 text-sm font-bold shadow-lg ${
+                    analysis.atsScore > previousScore
+                      ? "bg-[#FF6B2B]/20 text-[#FF6B2B] border border-[#FF6B2B]/30"
+                      : analysis.atsScore < previousScore
+                      ? "bg-red-500/20 text-red-500 border border-red-500/30"
+                      : "bg-zinc-800 text-zinc-400 border border-zinc-700"
+                  }`}>
+                    {analysis.atsScore > previousScore
+                      ? `📈 +${analysis.atsScore - previousScore} points improved!`
+                      : analysis.atsScore < previousScore
+                      ? `📉 ${previousScore - analysis.atsScore} points decreased`
+                      : "Score unchanged"}
+                  </span>
+                </div>
+              )}
               <h2 className="mt-6 text-xl font-semibold text-white">ATS Compatibility Score</h2>
               <p className={`mt-2 text-lg font-medium ${getScoreColor(analysis.atsScore)}`}>
                 {getVerdictLabel(analysis.atsScore)}
@@ -387,17 +762,56 @@ export default function ResumePage() {
               ))}
             </div>
 
+            {/* Section Breakdown */}
+            {analysis.sectionScores && (
+              <div className="mt-8 rounded-2xl bg-zinc-900 p-6">
+                <h3 className="mb-6 text-lg font-semibold text-white">📋 Section Breakdown</h3>
+                <div className="space-y-4">
+                  {[
+                    { label: "Contact Info", score: analysis.sectionScores.contact, max: 20 },
+                    { label: "Professional Summary", score: analysis.sectionScores.professionalSummary, max: 15 },
+                    { label: "Skills", score: analysis.sectionScores.skills, max: 20 },
+                    { label: "Work History", score: analysis.sectionScores.workHistory, max: 25 },
+                    { label: "Education", score: analysis.sectionScores.education, max: 10 },
+                    { label: "Formatting", score: analysis.sectionScores.formatting, max: 10 },
+                  ].map((item) => {
+                    const value = item.score || 0;
+                    const percent = Math.min(100, Math.max(0, (value / item.max) * 100));
+                    
+                    let colorClass = "bg-red-500";
+                    if (percent >= 50 && percent <= 75) colorClass = "bg-yellow-400";
+                    else if (percent > 75) colorClass = "bg-[#FF6B2B]";
+
+                    return (
+                      <div key={item.label}>
+                        <div className="mb-1 flex justify-between text-sm">
+                          <span className="font-medium text-zinc-300">{item.label}</span>
+                          <span className="text-zinc-500">{value}/{item.max}</span>
+                        </div>
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-800">
+                          <div
+                            className={`h-full rounded-full ${colorClass}`}
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Keywords */}
             <div className="mt-8 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
               <h3 className="text-lg font-semibold text-white">Keywords Analysis</h3>
               <div className="mt-4">
-                <p className="text-sm font-medium text-[#00C853]">Keywords Found</p>
+                <p className="text-sm font-medium text-[#FF6B2B]">Keywords Found</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {analysis.keywordsFound.length > 0 ? (
                     analysis.keywordsFound.map((kw) => (
                       <span
                         key={kw}
-                        className="rounded-lg border border-[#00C853]/30 bg-[#00C853]/10 px-3 py-1 text-xs font-medium text-[#00C853]"
+                        className="rounded-lg border border-[#FF6B2B]/30 bg-[#FF6B2B]/10 px-3 py-1 text-xs font-medium text-[#FF6B2B]"
                       >
                         {kw}
                       </span>
@@ -449,7 +863,7 @@ export default function ResumePage() {
               <ol className="mt-4 space-y-3">
                 {analysis.suggestions.map((suggestion, i) => (
                   <li key={suggestion} className="flex gap-3 text-sm text-zinc-300">
-                    <span className="shrink-0 text-[#00C853]">✅</span>
+                    <span className="shrink-0 text-[#FF6B2B]">✅</span>
                     <span>
                       <span className="font-medium text-white">{i + 1}. </span>
                       {suggestion}
@@ -465,13 +879,13 @@ export default function ResumePage() {
                 <button
                   type="button"
                   onClick={handleFixResume}
-                  className="rounded-xl bg-[#00C853] px-8 py-3 text-base font-bold text-black transition-colors hover:bg-[#00b34a] shadow-lg shadow-[#00C853]/20"
+                  className="rounded-xl bg-[#FF6B2B] px-8 py-3 text-base font-bold text-black transition-all duration-200 hover:scale-105 hover:brightness-110 shadow-lg shadow-[#FF6B2B]/20"
                 >
                   ✨ Fix My Resume with AI
                 </button>
               )}
               {fixing && (
-                <p className="text-center font-medium text-[#00C853]">
+                <p className="text-center font-medium text-[#FF6B2B]">
                   🔄 AI is rewriting your resume...
                 </p>
               )}
@@ -481,7 +895,7 @@ export default function ResumePage() {
             {fixData && (
               <div className="mt-8 space-y-6">
                 {/* Section A — Professional Summary */}
-                <div className="relative rounded-2xl border border-zinc-800 border-l-4 border-l-[#00C853] bg-zinc-900/40 p-6">
+                <div className="relative rounded-2xl border border-zinc-800 border-l-4 border-l-[#FF6B2B] bg-zinc-900/40 p-6">
                   <h3 className="text-lg font-semibold text-white">✅ Rewritten Professional Summary</h3>
                   <p className="mt-3 leading-relaxed text-zinc-300">{fixData.professionalSummary}</p>
                   <button
@@ -498,15 +912,15 @@ export default function ResumePage() {
                   <div className="mt-6 space-y-6">
                     {fixData.beforeAfterBullets?.map((item: any, i: number) => (
                       <div key={i} className="space-y-3">
-                        <h4 className="text-sm font-semibold text-[#00C853]">{item.section}</h4>
+                        <h4 className="text-sm font-semibold text-[#FF6B2B]">{item.section}</h4>
                         <div className="grid gap-4 sm:grid-cols-2">
                           <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4">
                             <p className="mb-2 text-xs font-medium uppercase text-red-400">Before</p>
                             <p className="text-sm text-red-400 line-through opacity-80">{item.before}</p>
                           </div>
-                          <div className="rounded-xl border border-[#00C853]/20 bg-[#00C853]/10 p-4">
-                            <p className="mb-2 text-xs font-medium uppercase text-[#00C853]">After</p>
-                            <p className="text-sm font-medium text-[#00C853]">{item.after}</p>
+                          <div className="rounded-xl border border-[#FF6B2B]/20 bg-[#FF6B2B]/10 p-4">
+                            <p className="mb-2 text-xs font-medium uppercase text-[#FF6B2B]">After</p>
+                            <p className="text-sm font-medium text-[#FF6B2B]">{item.after}</p>
                           </div>
                         </div>
                       </div>
@@ -521,7 +935,7 @@ export default function ResumePage() {
                     {fixData.skillsToAdd?.map((skill: string) => (
                       <span
                         key={skill}
-                        className="rounded-lg border border-[#00C853]/30 bg-[#00C853]/10 px-3 py-1 text-sm font-medium text-[#00C853]"
+                        className="rounded-lg border border-[#FF6B2B]/30 bg-[#FF6B2B]/10 px-3 py-1 text-sm font-medium text-[#FF6B2B]"
                       >
                         {skill}
                       </span>
@@ -544,18 +958,197 @@ export default function ResumePage() {
               </div>
             )}
 
+            {fixData && (
+              <div className="mt-8">
+                <button
+                  onClick={handleApplyFixes}
+                  className="w-full rounded-xl bg-[#FF6B2B] py-4 text-base font-bold text-black transition-all duration-200 hover:scale-105 hover:brightness-110"
+                >
+                  ✨ Apply All AI Fixes & Rebuild Resume
+                </button>
+              </div>
+            )}
+
+            {rebuiltResumeText && (
+              <div className="mt-8">
+                <h3 className="mb-4 text-lg font-semibold text-white">📄 Your Improved Resume</h3>
+                <div className="relative rounded-2xl border border-[#FF6B2B]/30 bg-zinc-900 p-6">
+                  <button
+                    onClick={() => navigator.clipboard.writeText(rebuiltResumeText)}
+                    className="absolute right-4 top-4 rounded-lg bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-white"
+                  >
+                    📋 Copy
+                  </button>
+                  <div className="whitespace-pre-wrap font-mono text-sm text-zinc-300">
+                    {rebuiltResumeText}
+                  </div>
+                </div>
+                
+                <button
+                  onClick={handleReanalyze}
+                  disabled={reanalyzing}
+                  className="mt-6 w-full rounded-xl bg-[#FF6B2B] py-4 text-base font-bold text-black transition-all duration-200 hover:scale-105 hover:brightness-110 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:brightness-100"
+                >
+                  {reanalyzing ? (
+                    <span className="flex items-center justify-center gap-3">
+                      <span className="h-5 w-5 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+                      🔄 Re-analyzing improved resume...
+                    </span>
+                  ) : (
+                    "🔄 Re-Analyze This Resume"
+                  )}
+                </button>
+              </div>
+            )}
+
             {/* Actions */}
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
               <button
                 type="button"
                 onClick={handleAnalyzeAnother}
-                className="rounded-xl border border-zinc-700 px-8 py-3 text-sm font-semibold text-white transition-colors hover:border-[#00C853]/50 hover:bg-zinc-800 sm:min-w-[220px]"
+                className="rounded-xl border border-zinc-700 px-8 py-3 text-sm font-semibold text-white transition-colors hover:border-[#FF6B2B]/50 hover:bg-zinc-800 sm:min-w-[220px]"
               >
                 Analyze Another Resume
               </button>
               <Link
                 href="/dashboard"
-                className="rounded-xl bg-[#00C853] px-8 py-3 text-center text-sm font-semibold text-black transition-colors hover:bg-[#00b34a] sm:min-w-[220px]"
+                className="rounded-xl bg-[#FF6B2B] px-8 py-3 text-center text-sm font-semibold text-black transition-all duration-200 hover:scale-105 hover:brightness-110 sm:min-w-[220px]"
+              >
+                Go to Dashboard
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {step === "results" && activeTab === "jdmatch" && jdMatchData && (
+          <div className="transition-opacity duration-300">
+            {/* TOP - Match Score Circle */}
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 text-center">
+              <CircularScore score={jdMatchData.matchScore} />
+              <h2 className="mt-6 text-xl font-semibold text-white">JD Match Score</h2>
+              <p className={`mt-2 text-lg font-bold ${getScoreColor(jdMatchData.matchScore)}`}>
+                {jdMatchData.matchRating}
+              </p>
+              
+              <div className="mt-4 flex justify-center">
+                <span className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold ${
+                  jdMatchData.atsWillPass ? 'bg-[#FF6B2B]/10 text-[#FF6B2B] border border-[#FF6B2B]/30' : 'bg-red-500/10 text-red-400 border border-red-500/30'
+                }`}>
+                  {jdMatchData.atsWillPass ? "✅ ATS Will Pass" : "❌ ATS Will Fail"}
+                </span>
+              </div>
+
+              <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400">
+                {jdMatchData.summary}
+              </p>
+            </div>
+
+            {/* MIDDLE - Skills */}
+            <div className="mt-6 grid gap-6 md:grid-cols-2">
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+                <h3 className="text-lg font-semibold text-white">✅ Matched Skills</h3>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {jdMatchData.matchedSkills?.length > 0 ? (
+                    jdMatchData.matchedSkills.map((skill: string) => (
+                      <span key={skill} className="rounded-lg border border-[#FF6B2B]/30 bg-[#FF6B2B]/10 px-3 py-1 text-xs font-medium text-[#FF6B2B]">
+                        {skill}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-sm text-zinc-500">No matching skills found</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+                <h3 className="text-lg font-semibold text-white">❌ Missing Skills</h3>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {jdMatchData.missingSkills?.length > 0 ? (
+                    jdMatchData.missingSkills.map((skill: string) => (
+                      <span key={skill} className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-medium text-red-400">
+                        {skill}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-sm text-zinc-500">No missing skills</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Below that - Requirements */}
+            <div className="mt-6 grid gap-6 md:grid-cols-2">
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+                <h3 className="text-lg font-semibold text-white">✅ Requirements Met</h3>
+                <ul className="mt-4 space-y-3">
+                  {jdMatchData.matchedRequirements?.length > 0 ? (
+                    jdMatchData.matchedRequirements.map((req: string, i: number) => (
+                      <li key={i} className="flex gap-2 text-sm text-[#FF6B2B]">
+                        <span>✓</span>
+                        <span className="text-zinc-300">{req}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-sm text-zinc-500">No requirements met</li>
+                  )}
+                </ul>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+                <h3 className="text-lg font-semibold text-white">❌ Requirements Missing</h3>
+                <ul className="mt-4 space-y-3">
+                  {jdMatchData.missingRequirements?.length > 0 ? (
+                    jdMatchData.missingRequirements.map((req: string, i: number) => (
+                      <li key={i} className="flex gap-2 text-sm text-red-400">
+                        <span>✕</span>
+                        <span className="text-zinc-300">{req}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-sm text-zinc-500">No missing requirements</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+
+            {/* BOTTOM - Experience Match */}
+            <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 flex flex-col items-center">
+              <h3 className="text-sm font-medium text-zinc-400">Experience Level Match</h3>
+              <span className={`mt-3 inline-block rounded-full px-6 py-2 text-sm font-bold ${
+                jdMatchData.experienceMatch === 'Perfect Match' ? 'bg-[#FF6B2B]/20 text-[#FF6B2B]' :
+                jdMatchData.experienceMatch === 'Overqualified' ? 'bg-yellow-500/20 text-yellow-400' :
+                'bg-red-500/20 text-red-400'
+              }`}>
+                {jdMatchData.experienceMatch}
+              </span>
+            </div>
+
+            {/* BOTTOM - Recommendations */}
+            <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+              <h3 className="text-lg font-semibold text-white">🚀 How to Improve Your Match</h3>
+              <div className="mt-4 space-y-4">
+                {jdMatchData.topRecommendations?.map((rec: string, i: number) => (
+                  <div key={i} className="flex gap-4 rounded-xl border border-zinc-800 border-l-4 border-l-[#FF6B2B] bg-zinc-900/60 p-4">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#FF6B2B]/20 text-xs font-bold text-[#FF6B2B]">
+                      {i + 1}
+                    </span>
+                    <p className="text-sm text-zinc-300">{rec}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
+              <button
+                type="button"
+                onClick={handleAnalyzeAnother}
+                className="rounded-xl border border-zinc-700 px-8 py-3 text-sm font-semibold text-white transition-colors hover:border-[#FF6B2B]/50 hover:bg-zinc-800 sm:min-w-[220px]"
+              >
+                Analyze Another Resume
+              </button>
+              <Link
+                href="/dashboard"
+                className="rounded-xl bg-[#FF6B2B] px-8 py-3 text-center text-sm font-semibold text-black transition-all duration-200 hover:scale-105 hover:brightness-110 sm:min-w-[220px]"
               >
                 Go to Dashboard
               </Link>

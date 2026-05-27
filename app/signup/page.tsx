@@ -20,7 +20,7 @@ const targetCompanies = [
 function Logo() {
   return (
     <Link href="/" className="text-xl font-bold tracking-tight">
-      <span className="text-[#00C853]">Hacker</span>
+      <span className="text-[#FF6B2B]">Hacker</span>
       <span className="text-white">Compliment</span>
     </Link>
   );
@@ -63,7 +63,7 @@ function Divider() {
 }
 
 const inputClass =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-800/50 px-4 py-3 text-sm text-white placeholder-zinc-500 outline-none transition-colors focus:border-[#00C853]/50 focus:ring-1 focus:ring-[#00C853]/30";
+  "w-full rounded-xl border border-zinc-700 bg-zinc-800/50 px-4 py-3 text-sm text-white placeholder-zinc-500 outline-none transition-colors focus:border-[#FF6B2B]/50 focus:ring-1 focus:ring-[#FF6B2B]/30";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -78,21 +78,14 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  async function handleGoogleSignup() {
-    setError(null);
-    setGoogleLoading(true);
-
+  const handleGoogleSignup = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
+      provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-
-    if (error) {
-      setError(error.message);
-      setGoogleLoading(false);
-    }
+        redirectTo: `${window.location.origin}/auth/callback`
+      }
+    })
+    if (error) alert('Google sign-in failed: ' + error.message)
   }
 
   async function handleSignup(e: React.FormEvent) {
@@ -137,7 +130,7 @@ export default function SignupPage() {
   return (
     <div className="relative flex min-h-full flex-col items-center justify-center px-4 py-12">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-1/2 top-0 h-[400px] w-[600px] -translate-x-1/2 rounded-full bg-[#00C853]/10 blur-[120px]" />
+        <div className="absolute left-1/2 top-0 h-[400px] w-[600px] -translate-x-1/2 rounded-full bg-[#FF6B2B]/10 blur-[120px]" />
       </div>
 
       <div className="relative w-full max-w-md">
@@ -153,7 +146,7 @@ export default function SignupPage() {
             <div
               className={`mt-4 rounded-lg border px-4 py-3 text-sm ${
                 error.includes("Check your email")
-                  ? "border-[#00C853]/30 bg-[#00C853]/10 text-[#00C853]"
+                  ? "border-[#FF6B2B]/30 bg-[#FF6B2B]/10 text-[#FF6B2B]"
                   : "border-red-500/30 bg-red-500/10 text-red-400"
               }`}
             >
@@ -270,7 +263,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading || googleLoading}
-              className="w-full rounded-xl bg-[#00C853] py-3 text-sm font-semibold text-black transition-colors hover:bg-[#00b34a] disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-xl bg-[#FF6B2B] py-3 text-sm font-semibold text-black transition-all duration-200 hover:scale-105 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Creating account..." : "Sign Up"}
             </button>
@@ -279,7 +272,7 @@ export default function SignupPage() {
 
         <p className="mt-6 text-center text-sm text-zinc-400">
           Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-[#00C853] hover:text-[#00b34a]">
+          <Link href="/login" className="font-semibold text-[#FF6B2B] hover:text-[#FF6B2B]">
             Login
           </Link>
         </p>

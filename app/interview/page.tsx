@@ -124,17 +124,17 @@ function aggregateEvaluations(evals: EvaluationResult[]): AggregatedResults {
 function getScoreColor(score: number) {
   if (score < 50) return "text-red-400";
   if (score < 70) return "text-yellow-400";
-  return "text-[#00C853]";
+  return "text-[#FF6B2B]";
 }
 
 function getScoreBorder(score: number) {
   if (score < 50) return "border-red-500/30 bg-red-500/10";
   if (score < 70) return "border-yellow-500/30 bg-yellow-500/10";
-  return "border-[#00C853]/30 bg-[#00C853]/10";
+  return "border-[#FF6B2B]/30 bg-[#FF6B2B]/10";
 }
 
 const inputClass =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-800/50 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#00C853]/50 focus:ring-1 focus:ring-[#00C853]/30 disabled:cursor-not-allowed disabled:opacity-60";
+  "w-full rounded-xl border border-zinc-700 bg-zinc-800/50 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#FF6B2B]/50 focus:ring-1 focus:ring-[#FF6B2B]/30 disabled:cursor-not-allowed disabled:opacity-60";
 
 const selectClass = `${inputClass} cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3E%3Cpath stroke=%27%239ca3af%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27m6 8 4 4 4-4%27/%3E%3C/svg%3E')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10`;
 
@@ -156,7 +156,7 @@ function OptionButtons<T extends string>({
           onClick={() => onSelect(option)}
           className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${
             selected === option
-              ? "border-[#00C853] bg-[#00C853]/15 text-[#00C853]"
+              ? "border-[#FF6B2B] bg-[#FF6B2B]/15 text-[#FF6B2B]"
               : "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white"
           }`}
         >
@@ -475,7 +475,7 @@ export default function InterviewPage() {
       <header className="border-b border-zinc-800">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/dashboard" className="text-lg font-bold tracking-tight">
-            <span className="text-[#00C853]">Hacker</span>
+            <span className="text-[#FF6B2B]">Hacker</span>
             <span className="text-white">Compliment</span>
           </Link>
           {step !== "setup" && (
@@ -495,7 +495,7 @@ export default function InterviewPage() {
                 Set up your mock interview — 5 questions with real AI evaluation.
               </p>
 
-              <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#00C853]/30 bg-[#00C853]/10 px-4 py-1.5 text-sm font-medium text-[#00C853]">
+              <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#FF6B2B]/30 bg-[#FF6B2B]/10 px-4 py-1.5 text-sm font-medium text-[#FF6B2B]">
                 {sessionsLoading ? (
                   "Loading session usage..."
                 ) : (
@@ -570,7 +570,7 @@ export default function InterviewPage() {
                   <button
                     type="button"
                     disabled
-                    className="w-full rounded-xl bg-[#00C853] py-4 text-base font-semibold text-black transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                    className="w-full rounded-xl bg-[#FF6B2B] py-4 text-base font-semibold text-black transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     Checking availability...
                   </button>
@@ -583,7 +583,7 @@ export default function InterviewPage() {
                     </p>
                     <Link
                       href="/pricing"
-                      className="inline-block rounded-lg bg-[#00C853] px-6 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-[#00b34a]"
+                      className="inline-block rounded-lg bg-[#FF6B2B] px-6 py-2.5 text-sm font-semibold text-black transition-all duration-200 hover:scale-105 hover:brightness-110"
                     >
                       Upgrade Now
                     </Link>
@@ -596,7 +596,7 @@ export default function InterviewPage() {
                     type="button"
                     onClick={handleStartInterview}
                     disabled={sessionLimitReached || sessionsLoading}
-                    className="w-full rounded-xl bg-[#00C853] py-4 text-base font-semibold text-black transition-colors hover:bg-[#00b34a] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="w-full rounded-xl bg-[#FF6B2B] py-4 text-base font-semibold text-black transition-all duration-200 hover:scale-105 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     Start Interview
                   </button>
@@ -670,13 +670,13 @@ export default function InterviewPage() {
                     <div className="mt-1 flex items-center gap-2">
                       <span className={`relative flex h-2 w-2 ${evaluating || isWaiting ? "" : "opacity-40"}`}>
                         {(evaluating || isWaiting) && (
-                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00C853] opacity-75" />
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#FF6B2B] opacity-75" />
                         )}
                         <span
-                          className={`relative inline-flex h-2 w-2 rounded-full ${evaluating || isWaiting ? "bg-[#00C853]" : "bg-zinc-600"}`}
+                          className={`relative inline-flex h-2 w-2 rounded-full ${evaluating || isWaiting ? "bg-[#FF6B2B]" : "bg-zinc-600"}`}
                         />
                       </span>
-                      <span className="text-xs text-[#00C853]">{aiStatus}</span>
+                      <span className="text-xs text-[#FF6B2B]">{aiStatus}</span>
                     </div>
                   </div>
                 </div>
@@ -689,7 +689,7 @@ export default function InterviewPage() {
                   </p>
                 </div>
                 {evaluating && (
-                  <div className="mt-4 rounded-lg border border-[#00C853]/20 bg-[#00C853]/5 px-4 py-3 text-center text-sm text-[#00C853]">
+                  <div className="mt-4 rounded-lg border border-[#FF6B2B]/20 bg-[#FF6B2B]/5 px-4 py-3 text-center text-sm text-[#FF6B2B]">
                     Alex is evaluating your answer...
                   </div>
                 )}
@@ -709,7 +709,7 @@ export default function InterviewPage() {
                   className={`${inputClass} min-h-[200px] flex-1 resize-y`}
                 />
                 <p
-                  className={`mt-2 text-xs ${answer.length >= 50 ? "text-[#00C853]" : "text-zinc-500"}`}
+                  className={`mt-2 text-xs ${answer.length >= 50 ? "text-[#FF6B2B]" : "text-zinc-500"}`}
                 >
                   {answer.length} characters
                   {answer.length < 50 && " — aim for at least 50 characters"}
@@ -719,7 +719,7 @@ export default function InterviewPage() {
                     type="button"
                     onClick={handleSubmitAnswer}
                     disabled={evaluating}
-                    className="flex-1 rounded-xl bg-[#00C853] py-3 text-sm font-semibold text-black transition-colors hover:bg-[#00b34a] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="flex-1 rounded-xl bg-[#FF6B2B] py-3 text-sm font-semibold text-black transition-all duration-200 hover:scale-105 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {evaluating ? "Evaluating..." : "Submit Answer"}
                   </button>
@@ -727,7 +727,7 @@ export default function InterviewPage() {
                     type="button"
                     onClick={handleSkipQuestion}
                     disabled={evaluating}
-                    className="text-center text-sm text-zinc-400 transition-colors hover:text-[#00C853] disabled:opacity-60 sm:px-4"
+                    className="text-center text-sm text-zinc-400 transition-colors hover:text-[#FF6B2B] disabled:opacity-60 sm:px-4"
                   >
                     Skip Question
                   </button>
@@ -742,7 +742,7 @@ export default function InterviewPage() {
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-zinc-800">
                 <div
-                  className="h-full rounded-full bg-[#00C853] transition-all duration-500 ease-out"
+                  className="h-full rounded-full bg-[#FF6B2B] transition-all duration-500 ease-out"
                   style={{
                     width: `${((questionIndex + (evaluating ? 0.5 : 0)) / TOTAL_QUESTIONS) * 100}%`,
                   }}
@@ -769,7 +769,7 @@ export default function InterviewPage() {
               <div
                 className={`mt-6 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold ${
                   results.wouldRecommend
-                    ? "border-[#00C853]/30 bg-[#00C853]/10 text-[#00C853]"
+                    ? "border-[#FF6B2B]/30 bg-[#FF6B2B]/10 text-[#FF6B2B]"
                     : "border-red-500/30 bg-red-500/10 text-red-400"
                 }`}
               >
@@ -816,11 +816,11 @@ export default function InterviewPage() {
 
             <div className="mt-8 grid gap-6 sm:grid-cols-2">
               <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
-                <h2 className="font-semibold text-[#00C853]">Strengths</h2>
+                <h2 className="font-semibold text-[#FF6B2B]">Strengths</h2>
                 <ul className="mt-4 space-y-2">
                   {results.strengths.map((item) => (
                     <li key={item} className="flex gap-2 text-sm text-zinc-300">
-                      <span className="text-[#00C853]">✓</span>
+                      <span className="text-[#FF6B2B]">✓</span>
                       {item}
                     </li>
                   ))}
@@ -843,13 +843,13 @@ export default function InterviewPage() {
               <button
                 type="button"
                 onClick={handlePracticeAgain}
-                className="rounded-xl bg-[#00C853] px-8 py-3 text-sm font-semibold text-black transition-colors hover:bg-[#00b34a] sm:min-w-[200px]"
+                className="rounded-xl bg-[#FF6B2B] px-8 py-3 text-sm font-semibold text-black transition-all duration-200 hover:scale-105 hover:brightness-110 sm:min-w-[200px]"
               >
                 Practice Again
               </button>
               <Link
                 href="/dashboard"
-                className="rounded-xl border border-zinc-700 px-8 py-3 text-center text-sm font-semibold text-white transition-colors hover:border-[#00C853]/50 hover:bg-zinc-800 sm:min-w-[200px]"
+                className="rounded-xl border border-zinc-700 px-8 py-3 text-center text-sm font-semibold text-white transition-colors hover:border-[#FF6B2B]/50 hover:bg-zinc-800 sm:min-w-[200px]"
               >
                 Go to Dashboard
               </Link>

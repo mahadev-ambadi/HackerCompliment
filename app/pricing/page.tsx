@@ -134,7 +134,7 @@ export default function PricingPage() {
           email: user.email || "",
         },
         theme: {
-          color: "#00C853",
+          color: "#FF6B2B",
         },
       };
 
@@ -159,7 +159,7 @@ export default function PricingPage() {
         <div className="mb-8">
           <Link
             href="/dashboard"
-            className="inline-flex items-center text-sm text-zinc-400 hover:text-[#00C853] transition-colors"
+            className="inline-flex items-center text-sm text-zinc-400 hover:text-[#FF6B2B] transition-colors"
           >
             <span className="mr-2">←</span> Back to Dashboard
           </Link>
@@ -167,7 +167,7 @@ export default function PricingPage() {
 
         <div className="text-center mb-16">
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
-            Simple, transparent <span className="text-[#00C853]">pricing</span>
+            Simple, transparent <span className="text-[#FF6B2B]">pricing</span>
           </h1>
           <p className="mt-4 max-w-2xl mx-auto text-xl text-zinc-400">
             Choose the perfect plan to boost your interview prep and land your dream job.
@@ -179,12 +179,12 @@ export default function PricingPage() {
             <div
               key={plan.planId}
               className={`relative flex flex-col p-8 rounded-2xl bg-zinc-900/50 border ${
-                plan.isPopular ? "border-[#00C853] shadow-[0_0_20px_rgba(0,200,83,0.15)]" : "border-zinc-800"
+                plan.isPopular ? "border-[#FF6B2B] shadow-[0_0_20px_rgba(0,200,83,0.15)]" : "border-zinc-800"
               }`}
             >
               {plan.isPopular && (
                 <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4">
-                  <span className="inline-flex items-center rounded-full bg-[#00C853] px-4 py-1 text-xs font-semibold uppercase tracking-wider text-black shadow-sm">
+                  <span className="inline-flex items-center rounded-full bg-[#FF6B2B] px-4 py-1 text-xs font-semibold uppercase tracking-wider text-black shadow-sm">
                     Most Popular
                   </span>
                 </div>
@@ -197,7 +197,7 @@ export default function PricingPage() {
                 {plan.features.map((feature, idx) => (
                   <li key={idx} className="flex items-center">
                     <svg
-                      className="h-5 w-5 text-[#00C853] shrink-0 mr-3"
+                      className="h-5 w-5 text-[#FF6B2B] shrink-0 mr-3"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -212,10 +212,10 @@ export default function PricingPage() {
               <button
                 onClick={() => handlePayment(plan.planId)}
                 disabled={loadingPlan === plan.planId}
-                className={`w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-900 focus:ring-[#00C853] ${
+                className={`w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-900 focus:ring-[#FF6B2B] ${
                   plan.isPopular
-                    ? "bg-[#00C853] text-black hover:bg-[#00b34a]"
-                    : "bg-zinc-800 text-white hover:bg-zinc-700 hover:text-[#00C853]"
+                    ? "bg-[#FF6B2B] text-black transition-all duration-200 hover:scale-105 hover:brightness-110"
+                    : "bg-zinc-800 text-white hover:bg-zinc-700 hover:text-[#FF6B2B]"
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {loadingPlan === plan.planId ? "Processing..." : "Choose Plan"}
