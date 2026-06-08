@@ -112,7 +112,7 @@ export async function GET(req: Request) {
     let monthlyRevenue = 0;
     let yearlyRevenue = 0;
     const planBreakdown: Record<string, number> = {};
-    const planDetails: Record<string, any[]> = {};
+    const planDetails: Record<string, { email: string, name: string, date: number }[]> = {};
     
     const nowTime = now.getTime();
     const oneWeek = 7 * 24 * 60 * 60 * 1000;
@@ -157,7 +157,7 @@ export async function GET(req: Request) {
     
     // Sort plan details descending (newest first)
     Object.keys(planDetails).forEach(plan => {
-      planDetails[plan].sort((a, b) => b.date - a.date);
+      planDetails[plan].sort((a, b) => (b.date || 0) - (a.date || 0));
     });
     
     return NextResponse.json({

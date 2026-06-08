@@ -64,7 +64,10 @@ export default function AdminAnalyticsPage() {
         }
       });
       
-      if (!res.ok) throw new Error("Failed to fetch user analytics");
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Failed to fetch user analytics: ${res.status} ${res.statusText} - ${errText}`);
+      }
       const apiData = await res.json();
       
       setStats({
