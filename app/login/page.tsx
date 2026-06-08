@@ -184,9 +184,9 @@ function LoginContent() {
             </div>
 
             <div className="flex justify-end">
-              <a href="#" className="text-sm text-[#FF6B2B] transition-colors hover:text-[#FF6B2B]">
+              <Link href="/forgot-password" className="text-sm text-[#FF6B2B] transition-colors hover:text-[#FF6B2B]">
                 Forgot Password?
-              </a>
+              </Link>
             </div>
 
             <button

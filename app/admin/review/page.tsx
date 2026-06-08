@@ -165,6 +165,9 @@ export default function AdminReviewPage() {
             <Link href="/dashboard" className="text-xl font-black text-white hover:text-[#FF6B2B] transition-colors">
               HackerCompliment
             </Link>
+            <Link href="/admin/problems" className="text-sm text-zinc-400 hover:text-white transition-colors">
+              Problems Queue
+            </Link>
             <span className="hidden sm:inline-block rounded-full bg-red-500/20 px-3 py-1 text-xs font-semibold text-red-400">
               Admin Area
             </span>
@@ -174,12 +177,12 @@ export default function AdminReviewPage() {
 
       <main className="py-8 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 mb-6">
-          <Link
-            href="/dashboard"
+          <button
+            onClick={() => router.back()}
             className="inline-block rounded-xl bg-zinc-800 px-5 py-2 text-sm font-bold text-white transition-all hover:bg-zinc-700"
           >
-            &larr; Back to Dashboard
-          </Link>
+            &larr; Back
+          </button>
         </div>
         
         <div className="mx-auto max-w-6xl px-4 sm:px-6">

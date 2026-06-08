@@ -7,6 +7,14 @@
     {
       "path": "/api/cron/extract",
       "schedule": "30 * * * *"
+    },
+    {
+      "path": "/api/cron/ingest-problems",
+      "schedule": "0 */8 * * *"
+    },
+    {
+      "path": "/api/cron/extract-problems",
+      "schedule": "30 */8 * * *"
     }
   ]
 }

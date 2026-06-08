@@ -4,6 +4,7 @@ import ProfileDropdown from "@/components/ProfileDropdown";
 import SessionTracker from "@/components/SessionTracker";
 import CodingPracticeCard from "@/components/CodingPracticeCard";
 import { createClient } from "@/lib/supabase/server";
+import { isAdmin } from "@/lib/admin";
 
 const dashboardCards = [
   {
@@ -65,6 +66,7 @@ export default async function DashboardPage() {
   }
 
   const user = data.session.user;
+  const isAdminUser = isAdmin(user.id);
 
   const { data: recentSessions } = await supabase
     .from("interview_sessions")
@@ -210,6 +212,37 @@ export default async function DashboardPage() {
             );
           })}
         </div>
+
+        {isAdminUser && (
+          <div className="mt-8 rounded-2xl border border-[#FF6B2B]/30 bg-zinc-900/40 p-6 shadow-[0_0_15px_rgba(255,107,43,0.05)]">
+            <div className="mb-6">
+              <span className="inline-block mb-2 rounded-full bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-400 border border-red-500/20">
+                Admin Area
+              </span>
+              <h2 className="text-xl font-bold text-white">Admin Panel</h2>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Link
+                href="/admin/review"
+                className="flex items-center justify-center rounded-xl border border-zinc-700 bg-zinc-800/50 py-4 text-sm font-semibold text-white transition-all hover:border-[#FF6B2B]/50 hover:bg-zinc-800"
+              >
+                Review Questions
+              </Link>
+              <Link
+                href="/admin/problems"
+                className="flex items-center justify-center rounded-xl border border-zinc-700 bg-zinc-800/50 py-4 text-sm font-semibold text-white transition-all hover:border-[#FF6B2B]/50 hover:bg-zinc-800"
+              >
+                Review Problems
+              </Link>
+              <Link
+                href="/admin/analytics"
+                className="flex items-center justify-center rounded-xl border border-[#FF6B2B]/30 bg-[#FF6B2B]/10 py-4 text-sm font-semibold text-[#FF6B2B] transition-all hover:bg-[#FF6B2B]/20"
+              >
+                View Analytics
+              </Link>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

@@ -36,7 +36,10 @@ export default function LandingPage() {
             <a href="#companies" className="nl text-sm font-medium text-zinc-300 hover:text-white">Companies</a>
           </nav>
 
-          <div className="hidden md:block">
+          <div className="hidden items-center gap-4 md:flex">
+            <Link href="/login" className="text-sm font-bold text-zinc-300 transition-colors hover:text-white">
+              Log In
+            </Link>
             <Link href="/signup" className="shimmer inline-block rounded-full bg-accent px-6 py-2.5 text-sm font-bold text-zinc-950 transition-transform hover:scale-105">
               Get Started Free
             </Link>
@@ -60,9 +63,14 @@ export default function LandingPage() {
             <a href="#how-it-works" className="text-lg font-medium text-zinc-300" onClick={() => setMobileMenuOpen(false)}>How It Works</a>
             <a href="#pricing" className="text-lg font-medium text-zinc-300" onClick={() => setMobileMenuOpen(false)}>Pricing</a>
             <a href="#companies" className="text-lg font-medium text-zinc-300" onClick={() => setMobileMenuOpen(false)}>Companies</a>
-            <Link href="/signup" className="mt-4 rounded-full bg-accent px-6 py-3 text-center font-bold text-zinc-950" onClick={() => setMobileMenuOpen(false)}>
-              Get Started Free
-            </Link>
+            <div className="mt-4 flex flex-col gap-3">
+              <Link href="/login" className="rounded-full border border-zinc-700 bg-transparent px-6 py-3 text-center font-bold text-white transition-colors hover:bg-zinc-900" onClick={() => setMobileMenuOpen(false)}>
+                Log In
+              </Link>
+              <Link href="/signup" className="rounded-full bg-accent px-6 py-3 text-center font-bold text-zinc-950 transition-transform hover:scale-[1.02]" onClick={() => setMobileMenuOpen(false)}>
+                Get Started Free
+              </Link>
+            </div>
           </div>
         )}
       </header>
@@ -134,17 +142,31 @@ export default function LandingPage() {
               <h2 className="mt-4 font-['PT_Sans'] text-4xl font-bold text-white md:text-5xl">Everything you need to ace your interview</h2>
             </div>
             
-            <div className="grid gap-6 md:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <div className="card-h rounded-2xl border border-zinc-800 bg-zinc-950 p-8">
                 <div className="mb-6 text-4xl">🎯</div>
-                <h3 className="mb-3 text-xl font-bold text-white">AI Interview Simulator</h3>
-                <p className="text-zinc-400 leading-relaxed">Practice with Alex AI across HR, Technical and Behavioral rounds for any company.</p>
+                <h3 className="mb-3 text-xl font-bold text-white">Technical Round</h3>
+                <p className="text-zinc-400 leading-relaxed">Practice with real company interview patterns for HR, Technical, and Behavioral rounds.</p>
               </div>
+              
+              <div className="card-h rounded-2xl border border-zinc-800 bg-zinc-900 p-8">
+                <div className="mb-6 text-4xl">🤖</div>
+                <h3 className="mb-3 text-xl font-bold text-white">AI Mock Interview</h3>
+                <p className="text-zinc-400 leading-relaxed">Experience a full-length comprehensive mock interview to test your endurance and knowledge.</p>
+              </div>
+
+              <div className="card-h rounded-2xl border border-zinc-800 bg-zinc-950 p-8">
+                <div className="mb-6 text-4xl">💻</div>
+                <h3 className="mb-3 text-xl font-bold text-white">Coding Practice</h3>
+                <p className="text-zinc-400 leading-relaxed">Practice real Data Structures and Algorithms (DSA) problems asked by top companies.</p>
+              </div>
+
               <div className="card-h rounded-2xl border border-zinc-800 bg-zinc-900 p-8">
                 <div className="mb-6 text-4xl">📄</div>
                 <h3 className="mb-3 text-xl font-bold text-white">Resume Analyzer</h3>
-                <p className="text-zinc-400 leading-relaxed">Get ATS score, keyword analysis and AI-powered fix suggestions for your resume.</p>
+                <p className="text-zinc-400 leading-relaxed">Get ATS score, keyword analysis, and AI-powered fix suggestions for your resume.</p>
               </div>
+
               <div className="card-h rounded-2xl border border-zinc-800 bg-zinc-950 p-8">
                 <div className="mb-6 text-4xl">📊</div>
                 <h3 className="mb-3 text-xl font-bold text-white">JD Match Analyzer</h3>
