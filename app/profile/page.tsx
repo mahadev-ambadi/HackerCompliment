@@ -86,7 +86,14 @@ export default function ProfilePage() {
 
       if (purchaseData && purchaseData.length > 0) {
         setPurchases(purchaseData);
-        setPlan(purchaseData[0].plan || "Pro");
+        const currentPlan = purchaseData.find((p: any) => p.status?.toLowerCase() === "completed" || p.status?.toLowerCase() === "active");
+        if (currentPlan) {
+          // Capitalize first letter of plan
+          const planName = currentPlan.plan ? currentPlan.plan.charAt(0).toUpperCase() + currentPlan.plan.slice(1) : "Pro";
+          setPlan(planName);
+        } else {
+          setPlan("Free");
+        }
       }
 
       setStats({
@@ -107,6 +114,7 @@ export default function ProfilePage() {
     setSaving(true);
     
     await supabase.auth.updateUser({
+      email: profile.email,
       data: {
         full_name: profile.name,
         college: profile.college,
@@ -302,7 +310,7 @@ export default function ProfilePage() {
                       <tr key={p.id}>
                         <td className="py-4">{new Date(p.created_at).toLocaleDateString()}</td>
                         <td className="py-4 font-medium text-white">{p.plan}</td>
-                        <td className="py-4">Rs.{p.amount}</td>
+                        <td className="py-4">Rs.{p.amount / 100}</td>
                         <td className="py-4">
                           <span className={`rounded-full px-2 py-1 text-xs font-semibold ${
                             p.status === "completed" || p.status === "Completed" 
@@ -344,12 +352,12 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-zinc-400">Email Address (Read Only)</label>
+                <label className="mb-2 block text-sm font-medium text-zinc-400">Email Address</label>
                 <input
                   type="email"
                   value={profile.email}
-                  disabled
-                  className="w-full rounded-xl border border-zinc-800 bg-zinc-950/50 p-3 text-sm text-zinc-500 cursor-not-allowed"
+                  onChange={(e) => setProfile({...profile, email: e.target.value})}
+                  className="w-full rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-white focus:border-[#FF6B2B] focus:outline-none focus:ring-1 focus:ring-[#FF6B2B]"
                 />
               </div>
               <div>
@@ -388,6 +396,12 @@ export default function ProfilePage() {
                 >
                   Change Password
                 </button>
+                <Link
+                  href="/profile/subscriptions"
+                  className="rounded-xl border border-zinc-700 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
+                >
+                  Subscriptions
+                </Link>
               </div>
               
               <button

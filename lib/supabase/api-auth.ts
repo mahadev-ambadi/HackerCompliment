@@ -22,12 +22,12 @@ export async function getApiUser(request: Request): Promise<User | null> {
   );
 
   const {
-    data: { user },
+    data: { session },
     error: cookieError,
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getSession();
 
-  if (user) {
-    return user;
+  if (session?.user) {
+    return session.user;
   }
 
   if (cookieError) {

@@ -1,6 +1,9 @@
 import Groq from "groq-sdk";
 import { NextResponse } from "next/server";
 
+// Bypass corporate SSL inspection/MITM proxy blocking outbound API calls
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 export type ResumeAnalysisResult = {
   atsScore: number;
   keywordsScore: number;
@@ -265,6 +268,7 @@ STEP 3 - Return ONLY this JSON (no markdown):
       ],
       temperature: 0.3,
       max_tokens: 1500,
+      response_format: { type: "json_object" },
     });
 
     const responseText = completion.choices[0]?.message?.content || "";
@@ -276,12 +280,26 @@ STEP 3 - Return ONLY this JSON (no markdown):
       );
     }
 
-    const cleanJson = responseText
+    let cleanJson = responseText
       .replace(/```json/gi, "")
       .replace(/```/g, "")
       .trim();
 
-    const analysis = parseAnalysis(JSON.parse(cleanJson) as Record<string, unknown>);
+    // Extract just the JSON object if there is surrounding text
+    const jsonMatch = cleanJson.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      cleanJson = jsonMatch[0];
+    }
+
+    let parsedRaw: Record<string, unknown>;
+    try {
+      parsedRaw = JSON.parse(cleanJson) as Record<string, unknown>;
+    } catch (parseError) {
+      console.error("Failed to parse Groq response as JSON. Raw response:", responseText);
+      throw new Error("Invalid JSON format from AI");
+    }
+
+    const analysis = parseAnalysis(parsedRaw);
 
     const s = analysis.sectionScores;
     if (s) {
@@ -300,10 +318,10 @@ STEP 3 - Return ONLY this JSON (no markdown):
     else analysis.rating = "Excellent";
 
     return NextResponse.json(analysis);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Resume analysis error:", error);
     return NextResponse.json(
-      { error: "Resume analysis failed. Please retry." },
+      { error: error?.message || "Resume analysis failed. Please retry." },
       { status: 500 }
     );
   }

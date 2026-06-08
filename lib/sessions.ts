@@ -1,5 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 export type SessionUsage = {
   sessions_used: number;
   weekStart: string;
@@ -70,18 +72,32 @@ export async function incrementSession(userId: string): Promise<SessionUsage> {
       ? (existing.sessions_used ?? 0) + 1
       : 1;
 
-  const { error: upsertError } = await supabase.from("session_usage").upsert(
-    {
-      user_id: userId,
-      sessions_used: sessionsUsed,
-      week_start: weekStart,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id" }
-  );
+  let dbError;
 
-  if (upsertError) {
-    throw upsertError;
+  if (existing) {
+    const { error } = await supabase
+      .from("session_usage")
+      .update({
+        sessions_used: sessionsUsed,
+        week_start: weekStart,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId);
+    dbError = error;
+  } else {
+    const { error } = await supabase
+      .from("session_usage")
+      .insert({
+        user_id: userId,
+        sessions_used: sessionsUsed,
+        week_start: weekStart,
+        updated_at: new Date().toISOString(),
+      });
+    dbError = error;
+  }
+
+  if (dbError) {
+    throw dbError;
   }
 
   return { sessions_used: sessionsUsed, weekStart };

@@ -57,6 +57,8 @@ export default function HistoryPage() {
   const [roleFilter, setRoleFilter] = useState("All Roles");
   const [typeFilter, setTypeFilter] = useState("All Types");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     async function loadHistory() {
@@ -132,6 +134,16 @@ export default function HistoryPage() {
     return list;
   }, [sessions, companyFilter, roleFilter, typeFilter, sortBy]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [companyFilter, roleFilter, typeFilter, sortBy]);
+
+  const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
+  const paginatedSessions = filteredSessions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   const stats = useMemo(() => {
     if (sessions.length === 0) {
       return { total: 0, average: 0, best: 0, companies: 0 };
@@ -154,23 +166,29 @@ export default function HistoryPage() {
 
   return (
     <div className="min-h-full bg-[#09090b]">
-      <header className="border-b border-zinc-800">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 sm:px-6">
-          <Link
-            href="/dashboard"
-            className="text-zinc-400 transition-colors hover:text-white"
-            aria-label="Back to dashboard"
-          >
-            ←
-          </Link>
-          <div>
-            <h1 className="text-lg font-bold text-white">Interview History</h1>
-            <p className="text-xs text-zinc-500">Track your progress over time</p>
+      <header className="border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-md sticky top-0 z-10">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+          <div className="flex items-center gap-4">
+            <Link href="/dashboard" className="text-xl font-black text-white hover:text-[#FF6B2B] transition-colors">
+              HackerCompliment
+            </Link>
+            <span className="hidden sm:inline-block rounded-full bg-zinc-800 px-3 py-1 text-xs font-semibold text-zinc-300">
+              Interview History
+            </span>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+      <main className="py-8 sm:px-6">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 mb-6">
+          <Link
+            href="/dashboard"
+            className="inline-block rounded-xl bg-[#FF6B2B] px-5 py-2 text-sm font-bold text-black transition-all hover:scale-[1.02] hover:brightness-110"
+          >
+            &larr; Back
+          </Link>
+        </div>
+        <div className="mx-auto max-w-6xl px-4">
         {loading && (
           <div className="flex flex-col items-center justify-center py-24">
             <span className="h-10 w-10 animate-spin rounded-full border-2 border-[#FF6B2B]/30 border-t-[#FF6B2B]" />
@@ -303,7 +321,7 @@ export default function HistoryPage() {
                   No interviews match your filters.
                 </p>
               ) : (
-                filteredSessions.map((session) => {
+                paginatedSessions.map((session) => {
                   const isExpanded = expandedId === session.id;
                   return (
                     <div
@@ -419,8 +437,31 @@ export default function HistoryPage() {
                 })
               )}
             </div>
+
+            {totalPages > 1 && (
+              <div className="mt-8 flex items-center justify-between border-t border-zinc-800 pt-6">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="min-w-[120px] px-6 py-3 text-sm font-medium bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-zinc-100 rounded-xl flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed hover:border-orange-500 transition-all duration-200"
+                >
+                  &larr; Previous
+                </button>
+                <span className="text-sm text-zinc-400">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="min-w-[120px] px-6 py-3 text-sm font-medium bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-zinc-100 rounded-xl flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed hover:border-orange-500 transition-all duration-200"
+                >
+                  Next &rarr;
+                </button>
+              </div>
+            )}
           </>
         )}
+        </div>
       </main>
     </div>
   );

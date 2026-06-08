@@ -1,6 +1,8 @@
 import Groq from "groq-sdk";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { getApiUser } from "@/lib/supabase/api-auth";
+import { rateLimit } from "@/lib/rateLimit";
 
 function getWeekStart(): string {
   const now = new Date();
@@ -94,15 +96,19 @@ async function saveInterviewSession(
   if (error) {
     console.error("Failed to save interview session:", error);
   }
-
-  await supabase.rpc('increment_session_count', {
-    p_user_id: userId,
-    p_week_start: getWeekStart(),
-  });
 }
 
 export async function POST(request: Request) {
   try {
+    const user = await getApiUser(request);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!rateLimit(user.id)) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const body = await request.json();
     const {
       question,
@@ -145,12 +151,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
-      messages: [
-        {
-          role: "system",
-          content: `You are an expert interviewer at ${company} evaluating a ${experienceLevel} candidate for ${role} in a ${interviewType}.
+
+    const prompt = `You are an expert interviewer at ${company} evaluating a ${experienceLevel} candidate for ${role} in a ${interviewType}.
 
 Evaluate the candidate answer strictly and fairly.
 
@@ -171,19 +173,18 @@ Scoring guide:
 Poor answer = 30-50
 Average answer = 50-65
 Good answer = 65-80
-Excellent answer = 80-95`,
-        },
-        {
-          role: "user",
-          content: `Question: ${question}
+Excellent answer = 80-95
 
+Question: ${question}
 Candidate Answer: ${answer || "(No answer provided)"}
 
-Evaluate this answer now. Return only JSON.`,
-        },
-      ],
+Evaluate this answer now. Return ONLY JSON.`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
       temperature: 0.3,
-      max_tokens: 1000,
+      response_format: { type: "json_object" },
     });
 
     const responseText = completion.choices[0]?.message?.content || "";
@@ -195,12 +196,46 @@ Evaluate this answer now. Return only JSON.`,
       );
     }
 
-    const cleanJson = responseText
+    let cleanJson = responseText
       .replace(/```json/gi, "")
       .replace(/```/g, "")
       .trim();
 
-    const evaluation = parseEvaluation(JSON.parse(cleanJson) as Record<string, unknown>);
+    let parsedData: Record<string, unknown>;
+    try {
+      parsedData = JSON.parse(cleanJson);
+    } catch (parseError) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("JSON parsing failed. Retrying after aggressive cleanup...");
+      }
+      
+      try {
+        const jsonMatch = cleanJson.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          cleanJson = jsonMatch[0];
+          parsedData = JSON.parse(cleanJson);
+        } else {
+          throw new Error("No JSON object found in response");
+        }
+      } catch (retryError) {
+        if (process.env.NODE_ENV === "development") {
+          console.error("Second parse attempt failed:", responseText);
+        }
+        return NextResponse.json({
+          overallScore: 0,
+          technicalScore: 0,
+          communicationScore: 0,
+          problemSolvingScore: 0,
+          confidenceScore: 0,
+          strengths: [],
+          improvements: ["AI Evaluation Failed"],
+          detailedFeedback: "We could not process your answer properly. Please try again.",
+          wouldRecommend: false
+        });
+      }
+    }
+
+    const evaluation = parseEvaluation(parsedData);
 
     if (saveSession && user_id) {
       await saveInterviewSession(
@@ -216,10 +251,19 @@ Evaluate this answer now. Return only JSON.`,
 
     return NextResponse.json(evaluation);
   } catch (error) {
-    console.error("Groq evaluation error:", error);
-    return NextResponse.json(
-      { error: "Evaluation failed. Please retry." },
-      { status: 500 }
-    );
+    if (process.env.NODE_ENV === "development") {
+      console.error("Groq evaluation error:", error);
+    }
+    return NextResponse.json({
+      overallScore: 0,
+      technicalScore: 0,
+      communicationScore: 0,
+      problemSolvingScore: 0,
+      confidenceScore: 0,
+      strengths: [],
+      improvements: ["AI Evaluation Failed"],
+      detailedFeedback: "An unexpected error occurred during AI evaluation.",
+      wouldRecommend: false
+    });
   }
 }

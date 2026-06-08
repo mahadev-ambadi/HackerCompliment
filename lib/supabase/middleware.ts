@@ -23,11 +23,16 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
+  console.log("Middleware running on:", request.nextUrl.pathname);
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  console.log("Middleware user:", user?.email ?? "NO USER");
+
   if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
+    console.log("No user found, redirecting to login");
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

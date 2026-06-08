@@ -2,11 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import ProfileDropdown from "@/components/ProfileDropdown";
 import SessionTracker from "@/components/SessionTracker";
+import CodingPracticeCard from "@/components/CodingPracticeCard";
 import { createClient } from "@/lib/supabase/server";
 
 const dashboardCards = [
   {
-    title: "Start Mock Interview",
+    title: "Technical Round",
     description: "Practice with AI using real company interview patterns.",
     primary: true,
     href: "/interview",
@@ -20,19 +21,19 @@ const dashboardCards = [
     label: "Open",
   },
   {
-    title: "My Progress",
-    description: "Track your interview readiness over time.",
+    title: "Coding Practice",
+    description: "Practice real DSA problems from top companies",
     primary: false,
-    href: "#",
-    label: "Open",
+    href: "/practice",
+    label: "Start Practicing",
   },
   {
-    title: "Interview History",
-    description: "Review past sessions and feedback reports.",
+    title: "Mock Interview",
+    description: "Full-length comprehensive mock interview.",
     primary: false,
-    href: "/history",
-    label: "Open",
-  },
+    href: "/mock-interview",
+    label: "Start Now",
+  }
 ];
 
 function formatDate(dateStr: string) {
@@ -51,13 +52,19 @@ function getScoreColor(score: number) {
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data, error } = await supabase.auth.getSession();
 
-  if (!user) {
+  if (error) {
+    console.error("REDIRECTING TO LOGIN BECAUSE (DASHBOARD FETCH ERROR):", error);
+  } else if (!data?.session?.user) {
+    console.log("REDIRECTING TO LOGIN BECAUSE (NO USER DATA FOUND IN DASHBOARD)");
+  }
+
+  if (error || !data?.session?.user) {
     redirect("/login");
   }
+
+  const user = data.session.user;
 
   const { data: recentSessions } = await supabase
     .from("interview_sessions")
@@ -82,10 +89,15 @@ export default async function DashboardPage() {
   const { data: purchaseData } = await supabase
     .from("purchases")
     .select("plan")
+    .in("status", ["active", "completed", "Completed"])
     .order("created_at", { ascending: false })
     .limit(1);
     
-  const plan = purchaseData && purchaseData.length > 0 ? purchaseData[0].plan : "Free";
+  let plan = "Free";
+  if (purchaseData && purchaseData.length > 0) {
+    const rawPlan = purchaseData[0].plan;
+    plan = rawPlan ? rawPlan.charAt(0).toUpperCase() + rawPlan.slice(1) : "Free";
+  }
 
   return (
     <div className="min-h-full bg-[#09090b]">
@@ -171,27 +183,32 @@ export default async function DashboardPage() {
         <SessionTracker userId={user.id} />
 
         <div className="grid gap-6 sm:grid-cols-2">
-          {dashboardCards.map((card) => (
-            <div
-              key={card.title}
-              className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6"
-            >
-              <h2 className="text-lg font-semibold text-white">{card.title}</h2>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-zinc-400">
-                {card.description}
-              </p>
-              <Link
-                href={card.href}
-                className={`mt-6 block w-full rounded-xl py-3 text-center text-sm font-semibold transition-colors ${
-                  card.primary
-                    ? "bg-[#FF6B2B] text-black transition-all duration-200 hover:scale-105 hover:brightness-110"
-                    : "border border-zinc-700 text-white hover:border-[#FF6B2B]/50 hover:bg-zinc-800"
-                }`}
+          {dashboardCards.map((card) => {
+            if (card.title === "Coding Practice") {
+              return <CodingPracticeCard key={card.title} userId={user.id} />;
+            }
+            return (
+              <div
+                key={card.title}
+                className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6"
               >
-                {card.label}
-              </Link>
-            </div>
-          ))}
+                <h2 className="text-lg font-semibold text-white">{card.title}</h2>
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-zinc-400">
+                  {card.description}
+                </p>
+                <Link
+                  href={card.href}
+                  className={`mt-6 block w-full rounded-xl py-3 text-center text-sm font-semibold transition-colors ${
+                    card.primary
+                      ? "bg-[#FF6B2B] text-black transition-all duration-200 hover:scale-105 hover:brightness-110"
+                      : "border border-zinc-700 text-white hover:border-[#FF6B2B]/50 hover:bg-zinc-800"
+                  }`}
+                >
+                  {card.label}
+                </Link>
+              </div>
+            );
+          })}
         </div>
       </main>
     </div>

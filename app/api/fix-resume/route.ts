@@ -47,6 +47,7 @@ Rewrite and fix this resume by providing:
 2. Rewritten project bullet points (stronger, with metrics)
 3. Skills to add for ${role} at ${company}
 4. 3 specific rewritten experience/project bullets showing before and after
+5. The COMPLETE fully rewritten resume text from top to bottom. YOU MUST preserve all original contact info (email, phone, linkedin, github, location), education, CGPA, and certifications so the resume passes strict ATS filters.
 
 Return ONLY this JSON:
 {
@@ -63,12 +64,14 @@ Return ONLY this JSON:
     "Quick actionable tip 1",
     "Quick actionable tip 2", 
     "Quick actionable tip 3"
-  ]
+  ],
+  "fullRewrittenResumeText": "The ENTIRE fully rebuilt resume text here including contact info, summary, skills, experience, and education."
 }`,
         },
       ],
       temperature: 0.3,
-      max_tokens: 1500,
+      max_tokens: 3000,
+      response_format: { type: "json_object" }
     });
 
     const responseText = completion.choices[0]?.message?.content || "";
@@ -80,10 +83,14 @@ Return ONLY this JSON:
       );
     }
 
-    const cleanJson = responseText
+    let cleanJson = responseText
       .replace(/```json/gi, "")
       .replace(/```/g, "")
       .trim();
+
+    // Safe extraction fallback
+    const jsonMatch = cleanJson.match(/\{[\s\S]*\}/);
+    if (jsonMatch) cleanJson = jsonMatch[0];
 
     return NextResponse.json(JSON.parse(cleanJson));
   } catch (error) {

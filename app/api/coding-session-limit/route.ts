@@ -1,4 +1,4 @@
-import { getWeekStart, incrementSession } from "@/lib/sessions";
+import { getWeekStart } from "@/lib/sessions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getApiUser } from "@/lib/supabase/api-auth";
 import { NextResponse } from "next/server";
@@ -11,11 +11,11 @@ export async function GET(request: Request) {
     const user = await getApiUser(request);
 
     if (!user) {
-      console.error("GET /api/sessions: Unauthorized — no user from cookies or token");
+      console.error("GET /api/coding-sessions: Unauthorized — no user from cookies or token");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const status = await canStartInterview(user);
+    const status = await canStartCoding(user);
     const FREE_LIMIT = 3;
 
     return NextResponse.json({
@@ -31,9 +31,9 @@ export async function GET(request: Request) {
       weekStart: getWeekStart(),
     });
   } catch (error) {
-    console.error("Session usage fetch error:", error);
+    console.error("Coding session usage fetch error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch session usage." },
+      { error: "Failed to fetch coding session usage." },
       { status: 500 }
     );
   }
@@ -44,34 +44,72 @@ export async function POST(request: Request) {
     const user = await getApiUser(request);
 
     if (!user) {
-      console.error("POST /api/sessions: Unauthorized — no user from cookies or token");
+      console.error("POST /api/coding-sessions: Unauthorized — no user from cookies or token");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const status = await canStartInterview(user);
+    const status = await canStartCoding(user);
 
     if (!status.allowed) {
-      console.warn(`User ${user.id} reached session limit. Blocking increment.`);
+      console.warn(`User ${user.id} reached coding session limit. Blocking increment.`);
       return NextResponse.json({ success: false, limitReached: true });
     }
 
     if (process.env.NODE_ENV === "development") {
-      console.log("POST /api/sessions: Incrementing for user", user.id);
+      console.log("POST /api/coding-sessions: Incrementing for user", user.id);
     }
 
-    const usage = await incrementSession(user.id);
+    const usage = await incrementCodingSession(user.id);
 
     return NextResponse.json({ success: true, ...usage });
   } catch (error) {
-    console.error("Session increment error:", error);
+    console.error("Coding session increment error:", error);
     return NextResponse.json(
-      { error: "Failed to update session usage." },
+      { error: "Failed to update coding session usage." },
       { status: 500 }
     );
   }
 }
 
-async function canStartInterview(user: any) {
+async function incrementCodingSession(userId: string) {
+  const supabase = createAdminClient();
+
+  const weekStartStr = getWeekStart();
+
+  const { data: existing } = await supabase
+    .from('coding_sessions')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('week_start', weekStartStr)
+    .single();
+
+  let sessionsUsed = 1;
+
+  if (existing) {
+    sessionsUsed = existing.sessions_used + 1;
+    await supabase
+      .from('coding_sessions')
+      .update({ 
+        sessions_used: sessionsUsed, 
+        updated_at: new Date().toISOString() 
+      })
+      .eq('user_id', userId)
+      .eq('week_start', weekStartStr);
+  } else {
+    await supabase
+      .from('coding_sessions')
+      .insert({ 
+        user_id: userId, 
+        week_start: weekStartStr, 
+        sessions_used: 1, 
+        bonus_credits: 0 
+      });
+  }
+
+  return { sessions_used: sessionsUsed, weekStart: weekStartStr };
+}
+
+async function canStartCoding(user: any) {
   const userId = user.id;
   const weekStart = getWeekStart();
   const supabase = createAdminClient();
@@ -90,9 +128,9 @@ async function canStartInterview(user: any) {
   const planName = activePurchase ? activePurchase.plan.toLowerCase() : 'free';
   const isUnlimitedPlan = planName === 'pro' || planName === 'boost';
 
-  // 2. Fetch session usage & bonus credits
+  // 2. Fetch session usage & bonus credits from coding_sessions table
   const { data: usageData } = await supabase
-    .from('session_usage')
+    .from('coding_sessions')
     .select('sessions_used, bonus_credits')
     .eq('user_id', userId)
     .eq('week_start', weekStart)
@@ -110,7 +148,7 @@ async function canStartInterview(user: any) {
     return {
       allowed: true,
       reason: "Active paid plan",
-      hasPlan: true, // Grants unlimited access in UI
+      hasPlan: true, 
       remainingSessions: Number.POSITIVE_INFINITY,
       sessions_used,
       bonus_credits,
@@ -152,7 +190,7 @@ async function canStartInterview(user: any) {
   }
 
   if (process.env.NODE_ENV === 'development') {
-    console.log(`[DEBUG] User ${userId} blocked. Used: ${sessions_used}, Limit: ${effectiveLimit}`);
+    console.log(`[DEBUG] User ${userId} blocked from coding. Used: ${sessions_used}, Limit: ${effectiveLimit}`);
   }
 
   return {

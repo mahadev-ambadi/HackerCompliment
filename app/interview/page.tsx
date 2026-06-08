@@ -8,27 +8,99 @@ import { createClient } from "@/lib/supabase";
 type Step = "setup" | "interview" | "results";
 
 const companies = [
-  "TCS",
-  "Wipro",
-  "Infosys",
-  "Accenture",
-  "Cognizant",
-  "Amazon",
-  "Google",
-  "Microsoft",
-  "Deloitte",
-  "Other",
+  "TCS", "Wipro", "Infosys", "Cognizant", "HCL", "Tech Mahindra", "Mphasis",
+  "Hexaware", "L&T Infotech", "Persistent Systems", "NIIT Technologies", "Mindtree",
+  "Mastech", "Zensar", "Cyient", "Sonata Software", "Tata Elxsi", "KPIT Technologies",
+  "Flipkart", "Zomato", "Swiggy", "Paytm", "PhonePe", "Ola", "BYJU'S",
+  "Meesho", "Razorpay", "Freshworks", "Zoho", "Zepto", "Cred", "Dream11", "Nykaa",
+  "Policybazaar", "Lenskart", "Dunzo", "Urban Company", "BigBasket", "Udaan",
+  "Groww", "Zerodha", "Upstox", "Slice", "BrowserStack", "Postman", "Chargebee",
+  "Hasura", "Clevertap", "MoEngage", "Mixpanel India", "Druva", "Innovaccer",
+  "Google", "Amazon", "Microsoft", "Meta", "Apple", "Netflix", "Uber",
+  "Airbnb", "LinkedIn", "Twitter", "Salesforce", "Adobe", "Oracle", "IBM", "SAP",
+  "Cisco", "Intel", "Qualcomm", "Texas Instruments", "Nvidia", "Atlassian",
+  "Stripe", "Square", "Shopify", "Spotify", "Snap", "Pinterest", "Reddit",
+  "Dropbox", "Box", "Slack", "Zoom", "HubSpot", "Workday", "ServiceNow",
+  "Goldman Sachs", "JPMorgan", "Morgan Stanley", "Deutsche Bank",
+  "Barclays", "HSBC", "Citi", "McKinsey", "BCG", "Bain", "Deloitte", "Accenture",
+  "EY", "PwC", "KPMG", "Capgemini", "Wipro Consulting"
 ];
 
 const roles = [
-  "Software Engineer",
-  "Data Analyst",
-  "Business Analyst",
-  "Full Stack Developer",
-  "Frontend Developer",
-  "Backend Developer",
-  "DevOps Engineer",
-  "Other",
+  // Software Development
+  'Software Engineer',
+  'Senior Software Engineer',
+  'Full Stack Developer',
+  'Frontend Developer',
+  'Backend Developer',
+  'Mobile Developer (Android)',
+  'Mobile Developer (iOS)',
+  'React Native Developer',
+  'Flutter Developer',
+
+  // Data & AI
+  'Data Analyst',
+  'Data Scientist',
+  'Machine Learning Engineer',
+  'AI Engineer',
+  'Data Engineer',
+  'Business Intelligence Analyst',
+  'NLP Engineer',
+  'Computer Vision Engineer',
+
+  // Cloud & DevOps
+  'DevOps Engineer',
+  'Cloud Engineer',
+  'Site Reliability Engineer (SRE)',
+  'AWS Solutions Architect',
+  'Platform Engineer',
+  'Infrastructure Engineer',
+
+  // Security
+  'Cybersecurity Analyst',
+  'Security Engineer',
+  'Penetration Tester',
+
+  // Product & Design
+  'Product Manager',
+  'Associate Product Manager',
+  'UI/UX Designer',
+  'Product Designer',
+
+  // Business & Consulting
+  'Business Analyst',
+  'Systems Analyst',
+  'Management Consultant',
+  'IT Consultant',
+  'ERP Consultant (SAP)',
+  'Salesforce Developer',
+
+  // QA & Testing
+  'QA Engineer',
+  'Test Automation Engineer',
+  'Manual Tester',
+
+  // Database
+  'Database Administrator',
+  'Database Developer',
+
+  // Management
+  'Engineering Manager',
+  'Technical Lead',
+  'Scrum Master',
+  'Project Manager',
+
+  // Finance Tech
+  'Quantitative Analyst',
+  'Fintech Developer',
+
+  // Support & Operations
+  'Technical Support Engineer',
+  'IT Support Specialist',
+  'Network Engineer',
+  'Systems Administrator',
+
+  'Other'
 ];
 
 const interviewTypes = ["HR Round", "Technical Round", "Behavioral Round"] as const;
@@ -37,7 +109,7 @@ const experienceLevels = ["Fresher", "1-3 Years", "3+ Years"] as const;
 type InterviewType = (typeof interviewTypes)[number];
 type ExperienceLevel = (typeof experienceLevels)[number];
 
-const TOTAL_QUESTIONS = 5;
+const TOTAL_QUESTIONS = 20;
 const FREE_SESSION_LIMIT = 3;
 
 const mockQuestions: Record<InterviewType, string[]> = {
@@ -97,6 +169,20 @@ function aggregatedToSessionPayload(agg: AggregatedResults) {
 }
 
 function aggregateEvaluations(evals: EvaluationResult[]): AggregatedResults {
+  if (evals.length === 0) {
+    return {
+      overall: 0,
+      technical: 0,
+      communication: 0,
+      problemSolving: 0,
+      confidence: 0,
+      strengths: [],
+      improvements: ["No answers were provided during the interview."],
+      detailedFeedback: "Interview ended without any responses from the candidate.",
+      wouldRecommend: false,
+    };
+  }
+
   const count = evals.length;
   const avg = (fn: (e: EvaluationResult) => number) =>
     Math.round(evals.reduce((sum, e) => sum + fn(e), 0) / count);
@@ -154,11 +240,10 @@ function OptionButtons<T extends string>({
           key={option}
           type="button"
           onClick={() => onSelect(option)}
-          className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${
-            selected === option
+          className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${selected === option
               ? "border-[#FF6B2B] bg-[#FF6B2B]/15 text-[#FF6B2B]"
               : "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white"
-          }`}
+            }`}
         >
           {option}
         </button>
@@ -170,12 +255,24 @@ function OptionButtons<T extends string>({
 export default function InterviewPage() {
   const [step, setStep] = useState<Step>("setup");
   const [company, setCompany] = useState(companies[0]);
+  const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
   const [role, setRole] = useState(roles[0]);
+  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [interviewType, setInterviewType] = useState<InterviewType>("Technical Round");
   const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel>("Fresher");
 
-  const [questionIndex, setQuestionIndex] = useState(0);
-  const [answer, setAnswer] = useState("");
+  const filteredCompanies = useMemo(() => {
+    if (!company) return companies;
+    return companies.filter(c => c.toLowerCase().includes(company.toLowerCase()));
+  }, [company]);
+
+  const filteredRoles = useMemo(() => {
+    if (!role) return roles;
+    return roles.filter(r => r.toLowerCase().includes(role.toLowerCase()));
+  }, [role]);
+
+  const [sessionLimitReached, setSessionLimitReached] = useState(false);
+  const [hasPlan, setHasPlan] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isWaiting, setIsWaiting] = useState(true);
 
@@ -188,16 +285,42 @@ export default function InterviewPage() {
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [sessionInfo, setSessionInfo] = useState<any>(null);
   const [checkingLimit, setCheckingLimit] = useState(true);
+  const [bonusCredits, setBonusCredits] = useState(0);
+  const [planName, setPlanName] = useState<string>("free");
+  const [isUnlimitedPlan, setIsUnlimitedPlan] = useState<boolean>(false);
+  const [planDate, setPlanDate] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const questions = useMemo(() => mockQuestions[interviewType], [interviewType]);
-  const currentQuestion = questions[questionIndex];
+  const FREE_SESSION_LIMIT = 3;
+  const sessionLimit = FREE_SESSION_LIMIT + bonusCredits;
+
+  const [questions, setQuestions] = useState<string[]>([]);
+  const [generatingQuestions, setGeneratingQuestions] = useState(false);
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [answer, setAnswer] = useState("");
+  const currentQuestion = questions?.[questionIndex] ?? "";
   const answeredCount = evaluations.length;
   const displayProgress =
     step === "interview"
       ? ((questionIndex + (evaluating ? 0 : 0)) / TOTAL_QUESTIONS) * 100
       : 100;
 
-  const sessionLimitReached = sessionInfo ? !sessionInfo.canStart : false;
+  const shouldBlockInterview = !hasPlan && sessionsUsed >= sessionLimit;
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("[DEBUG Session Limits]:", {
+        hasPlan,
+        sessionsUsed,
+        sessionLimitReached,
+        shouldBlockInterview,
+        sessionLimit,
+        bonusCredits,
+        planName,
+        isUnlimitedPlan
+      });
+    }
+  }, [hasPlan, sessionsUsed, sessionLimitReached, shouldBlockInterview, sessionLimit, bonusCredits, planName, isUnlimitedPlan]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -213,15 +336,23 @@ export default function InterviewPage() {
       setCheckingLimit(true);
       try {
         const authHeaders = await getSessionAuthHeaders();
-        const res = await fetch("/api/session-limit", {
+        const res = await fetch(`/api/session-limit?userId=${userId}`, {
           credentials: "include",
           headers: authHeaders,
+          cache: "no-store",
         });
         const data = await res.json();
         if (isMounted) {
           setSessionInfo(data);
           setSessionsUsed(data.sessions_used ?? 0);
+          setBonusCredits(data.bonus_credits ?? 0);
+          setHasPlan(data.hasPlan ?? false);
+          setPlanName(data.planName?.toLowerCase() ?? "free");
+          setIsUnlimitedPlan(data.isUnlimitedPlan ?? false);
+          setPlanDate(data.planDate ?? null);
+          setSessionLimitReached(!data.canStart);
           setCheckingLimit(false);
+          setSessionsLoading(false);
         }
       } catch (err) {
         console.error("Failed to fetch session limit", err);
@@ -249,16 +380,26 @@ export default function InterviewPage() {
     setSessionsLoading(true);
     try {
       const authHeaders = await getSessionAuthHeaders();
-      const res = await fetch("/api/session-limit", {
+      const res = await fetch(`/api/session-limit?userId=${userId}`, {
         credentials: "include",
         headers: authHeaders,
+        cache: "no-store",
       });
       const data = await res.json();
       console.log("GET /api/session-limit response:", res.status, data);
 
-      if (res.ok) {
-        setSessionsUsed(data.sessions_used ?? 0);
-        setSessionInfo(data);
+      setSessionInfo(data);
+      setSessionsUsed(data.sessions_used ?? 0);
+      setBonusCredits(data.bonus_credits ?? 0);
+      setHasPlan(data.hasPlan ?? false);
+      setPlanName(data.planName?.toLowerCase() ?? "free");
+      setIsUnlimitedPlan(data.isUnlimitedPlan ?? false);
+      setPlanDate(data.planDate ?? null);
+      
+      if (!data.canStart) {
+        setSessionLimitReached(true);
+      } else {
+        setSessionLimitReached(false);
       }
     } catch (err) {
       console.error("Failed to fetch session usage:", err);
@@ -314,7 +455,7 @@ export default function InterviewPage() {
     }
   }
 
-  async function incrementSessionUsage() {
+  async function incrementSessionUsage(): Promise<{ success: boolean; limitReached: boolean }> {
     try {
       const authHeaders = await getSessionAuthHeaders();
       const res = await fetch("/api/session-limit", {
@@ -326,18 +467,32 @@ export default function InterviewPage() {
         },
         body: JSON.stringify({ userId }),
       });
-      const data = await res.json();
-      console.log("POST /api/session-limit response:", res.status, data);
-
-      if (!res.ok) {
-        console.error("Session increment failed:", data);
-        return;
+      const text = await res.text();
+      let data: Record<string, any> = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = {};
       }
 
-      setSessionsUsed(data.sessions_used ?? 0);
-      await fetchSessionUsage();
+      if (process.env.NODE_ENV === "development") {
+        console.log("POST /api/session-limit response:", res.status, data);
+      }
+
+      if (data.limitReached) {
+        return { success: false, limitReached: true };
+      }
+
+      if (!res.ok) {
+        console.warn("Session increment non-critical failure:", data);
+        return { success: false, limitReached: false };
+      }
+
+      setSessionsUsed(data.sessions_used ?? sessionsUsed + 1);
+      return { success: true, limitReached: false };
     } catch (err) {
-      console.error("Failed to increment session usage:", err);
+      console.warn("Non-critical background error in session increment:", err);
+      return { success: false, limitReached: false };
     }
   }
 
@@ -346,8 +501,12 @@ export default function InterviewPage() {
     setResults(agg);
     setStep("results");
 
-    await saveSessionToDatabase(agg);
-    await incrementSessionUsage();
+    try {
+      await saveSessionToDatabase(agg);
+    } catch (dbError) {
+      console.warn("Failed to save session to DB:", dbError);
+    }
+
   }
 
   async function evaluateAnswer(answerText: string) {
@@ -438,7 +597,19 @@ export default function InterviewPage() {
       return;
     }
 
-    setEvalError("Answer at least one question before ending the interview.");
+    const fallbackEvaluation: EvaluationResult = {
+      overallScore: 0,
+      technicalScore: 0,
+      communicationScore: 0,
+      problemSolvingScore: 0,
+      confidenceScore: 0,
+      strengths: [],
+      improvements: ["No answers were provided during the interview."],
+      detailedFeedback: "Interview ended without any responses from the candidate.",
+      wouldRecommend: false
+    };
+
+    await completeInterview([fallbackEvaluation]);
   }
 
   function handlePracticeAgain() {
@@ -452,8 +623,59 @@ export default function InterviewPage() {
     setStep("setup");
   }
 
-  function handleStartInterview() {
-    if (sessionLimitReached) return;
+  function showToast(msg: string) {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 4000);
+  }
+
+  async function handleStartInterview() {
+    if (shouldBlockInterview) return;
+
+    setGeneratingQuestions(true);
+
+    try {
+      const url = new URL("/api/questions", window.location.origin);
+      url.searchParams.append("company", company);
+      url.searchParams.append("role", role);
+      url.searchParams.append("interviewType", interviewType);
+      if (userId) url.searchParams.append("userId", userId);
+      url.searchParams.append("count", "20");
+
+      const res = await fetch(url.toString());
+      const data = await res.json();
+
+      let fetchedQuestions = data.questions?.map((q: any) => q.question_text || q.question || q) || [];
+
+      if (data.resetOccurred) {
+        showToast("🔄 You've completed all questions for this company! Starting fresh.");
+      }
+
+      if (fetchedQuestions.length === 0) {
+        // Fallback to Groq
+        const groqRes = await fetch("/api/generate-questions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ company, role, interviewType }),
+        });
+        const groqData = await groqRes.json();
+        fetchedQuestions = groqData.questions || [];
+      }
+
+      setQuestions(fetchedQuestions);
+
+      // Increment session ONLY after successful question load
+      const incResult = await incrementSessionUsage();
+      if (incResult.limitReached) {
+        setSessionLimitReached(true);
+        setGeneratingQuestions(false);
+        return;
+      }
+    } catch (err) {
+      console.error("Failed to fetch/generate questions", err);
+      alert("Failed to load interview questions. Please try again.");
+      setGeneratingQuestions(false);
+      return;
+    }
 
     setQuestionIndex(0);
     setAnswer("");
@@ -461,6 +683,7 @@ export default function InterviewPage() {
     setEvaluations([]);
     setResults(null);
     setEvalError(null);
+    setGeneratingQuestions(false);
     setStep("interview");
   }
 
@@ -474,78 +697,130 @@ export default function InterviewPage() {
     <div className="min-h-full bg-[#09090b]">
       <header className="border-b border-zinc-800">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href="/dashboard" className="text-lg font-bold tracking-tight">
-            <span className="text-[#FF6B2B]">Hacker</span>
-            <span className="text-white">Compliment</span>
-          </Link>
-          {step !== "setup" && (
-            <span className="text-xs text-zinc-500 sm:text-sm">AI Interview Simulator</span>
-          )}
+          <div className="flex items-center gap-4">
+            <Link href="/dashboard" className="text-lg font-bold tracking-tight">
+              <span className="text-[#FF6B2B]">Hacker</span>
+              <span className="text-white">Compliment</span>
+            </Link>
+            {step !== "setup" && (
+              <span className="text-xs text-zinc-500 sm:text-sm">AI Interview Simulator</span>
+            )}
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+      <main className="py-8 sm:py-12">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 mb-6">
+          <Link
+            href="/dashboard"
+            className="inline-block rounded-xl bg-[#FF6B2B] px-5 py-2 text-sm font-bold text-black transition-all hover:scale-[1.02] hover:brightness-110"
+          >
+            &larr; Back
+          </Link>
+        </div>
         {step === "setup" && (
           <div className="mx-auto max-w-xl transition-opacity duration-300">
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 shadow-xl backdrop-blur-sm sm:p-8">
               <h1 className="text-2xl font-bold text-white sm:text-3xl">
-                Configure Your Interview
+                Configure Technical Round
               </h1>
               <p className="mt-2 text-sm text-zinc-400">
-                Set up your mock interview — 5 questions with real AI evaluation.
+                Set up your technical round — 20 questions with real AI evaluation.
               </p>
 
               <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#FF6B2B]/30 bg-[#FF6B2B]/10 px-4 py-1.5 text-sm font-medium text-[#FF6B2B]">
                 {sessionsLoading ? (
                   "Loading session usage..."
+                ) : isUnlimitedPlan ? (
+                  <>Unlimited Access</>
                 ) : (
                   <>
-                    {sessionsUsed} of {FREE_SESSION_LIMIT} free sessions used this week
+                    {Math.min(sessionsUsed, sessionLimit)} of {sessionLimit} {planName === 'free' ? 'free ' : ''}sessions used{planName === 'free' ? ' this week' : ''}
                   </>
                 )}
               </div>
 
-              {sessionLimitReached && (
-                <p className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-                  Session limit reached. Upgrade to Pro
-                </p>
-              )}
-
               <div className="mt-8 space-y-6">
-                <div>
+                <div className="relative">
                   <label htmlFor="company" className="mb-2 block text-sm font-medium text-zinc-300">
                     Company
                   </label>
-                  <select
+                  <input
                     id="company"
                     value={company}
-                    onChange={(e) => setCompany(e.target.value)}
-                    className={selectClass}
-                  >
-                    {companies.map((c) => (
-                      <option key={c} value={c} className="bg-zinc-900">
-                        {c}
-                      </option>
-                    ))}
-                  </select>
+                    onFocus={() => setShowCompanyDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowCompanyDropdown(false), 200)}
+                    onChange={(e) => {
+                      setCompany(e.target.value);
+                      setShowCompanyDropdown(true);
+                    }}
+                    placeholder="Type or select a company..."
+                    className={inputClass}
+                    autoComplete="off"
+                  />
+                  {showCompanyDropdown && (
+                    <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-[300px] overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-900 shadow-xl">
+                      {filteredCompanies.length > 0 ? (
+                        filteredCompanies.map((c) => (
+                          <div
+                            key={c}
+                            onMouseDown={() => {
+                              setCompany(c);
+                              setShowCompanyDropdown(false);
+                            }}
+                            className="cursor-pointer px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                          >
+                            {c}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-2 text-sm text-zinc-500">
+                          Custom company will be added
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                <div>
+                <div className="relative">
                   <label htmlFor="role" className="mb-2 block text-sm font-medium text-zinc-300">
                     Role
                   </label>
-                  <select
+                  <input
                     id="role"
                     value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                    className={selectClass}
-                  >
-                    {roles.map((r) => (
-                      <option key={r} value={r} className="bg-zinc-900">
-                        {r}
-                      </option>
-                    ))}
-                  </select>
+                    onFocus={() => setShowRoleDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowRoleDropdown(false), 200)}
+                    onChange={(e) => {
+                      setRole(e.target.value);
+                      setShowRoleDropdown(true);
+                    }}
+                    placeholder="Type or select a role..."
+                    className={inputClass}
+                    autoComplete="off"
+                  />
+                  {showRoleDropdown && (
+                    <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-[300px] overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-900 shadow-xl">
+                      {filteredRoles.length > 0 ? (
+                        filteredRoles.map((r) => (
+                          <div
+                            key={r}
+                            onMouseDown={() => {
+                              setRole(r);
+                              setShowRoleDropdown(false);
+                            }}
+                            className="cursor-pointer px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                          >
+                            {r}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-2 text-sm text-zinc-500">
+                          Custom role will be added
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -566,41 +841,47 @@ export default function InterviewPage() {
                   />
                 </div>
 
-                {checkingLimit ? (
-                  <button
-                    type="button"
-                    disabled
-                    className="w-full rounded-xl bg-[#FF6B2B] py-4 text-base font-semibold text-black transition-colors disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Checking availability...
-                  </button>
-                ) : sessionInfo?.canStart === false ? (
-                  <div className="rounded-xl border border-red-500/30 bg-zinc-900 p-5 text-center">
-                    <div className="mb-2 text-2xl">🚫</div>
-                    <h3 className="mb-2 font-bold text-white">Weekly Limit Reached</h3>
-                    <p className="mb-4 text-sm text-zinc-300">
-                      You've used all 3 free sessions this week. Resets every Monday.
+                {shouldBlockInterview && (
+                  <div className="mt-5 rounded-2xl border border-red-500/20 bg-gradient-to-br from-red-500/10 to-orange-500/10 p-5 shadow-lg shadow-red-500/5 backdrop-blur flex flex-col items-center justify-center text-center relative overflow-hidden">
+                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-red-500/20 text-red-500 ring-4 ring-red-500/10">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                        <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-1">Free Limit Reached</h3>
+                    <p className="text-sm text-zinc-300 mb-5 max-w-sm">
+                      You've used all {sessionLimit} of your interview sessions this week.<br />
+                      Upgrade your plan to continue unlimited AI interviews.
                     </p>
                     <Link
                       href="/pricing"
-                      className="inline-block rounded-lg bg-[#FF6B2B] px-6 py-2.5 text-sm font-semibold text-black transition-all duration-200 hover:scale-105 hover:brightness-110"
+                      className="rounded-xl bg-gradient-to-r from-[#FF6B2B] to-[#FF4B2B] px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition-all hover:scale-105 hover:brightness-110"
                     >
-                      Upgrade Now
+                      View Plans
                     </Link>
-                    <p className="mt-3 text-xs text-zinc-500">
-                      Or wait until Monday for your free sessions to reset.
-                    </p>
                   </div>
-                ) : (
+                )}
+
+                <div className={shouldBlockInterview ? "pt-2" : "pt-4"}>
                   <button
                     type="button"
-                    onClick={handleStartInterview}
-                    disabled={sessionLimitReached || sessionsLoading}
-                    className="w-full rounded-xl bg-[#FF6B2B] py-4 text-base font-semibold text-black transition-all duration-200 hover:scale-105 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                    onClick={shouldBlockInterview ? undefined : handleStartInterview}
+                    disabled={shouldBlockInterview || sessionsLoading || generatingQuestions}
+                    className={`w-full rounded-xl py-4 text-base font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${shouldBlockInterview
+                        ? "bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-60"
+                        : "bg-[#FF6B2B] text-black hover:scale-105 hover:brightness-110"
+                      }`}
                   >
-                    Start Interview
+                    {generatingQuestions ? (
+                      <>
+                        <span className="h-5 w-5 animate-spin rounded-full border-2 border-black/30 border-t-black"></span>
+                        Loading Questions...
+                      </>
+                    ) : (
+                      "Start Interview"
+                    )}
                   </button>
-                )}
+                </div>
               </div>
             </div>
           </div>
@@ -767,11 +1048,10 @@ export default function InterviewPage() {
               </p>
 
               <div
-                className={`mt-6 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold ${
-                  results.wouldRecommend
+                className={`mt-6 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold ${results.wouldRecommend
                     ? "border-[#FF6B2B]/30 bg-[#FF6B2B]/10 text-[#FF6B2B]"
                     : "border-red-500/30 bg-red-500/10 text-red-400"
-                }`}
+                  }`}
               >
                 Would Recommend: {results.wouldRecommend ? "Yes" : "No"}
               </div>
@@ -857,6 +1137,12 @@ export default function InterviewPage() {
           </div>
         )}
       </main>
+
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 bg-zinc-800 text-white px-5 py-3 rounded-xl shadow-2xl border border-zinc-700 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          {toastMessage}
+        </div>
+      )}
     </div>
   );
 }

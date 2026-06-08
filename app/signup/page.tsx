@@ -67,7 +67,7 @@ const inputClass =
 
 export default function SignupPage() {
   const router = useRouter();
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -75,22 +75,24 @@ export default function SignupPage() {
   const [college, setCollege] = useState("");
   const [targetCompany, setTargetCompany] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleGoogleSignup = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
-    })
-    if (error) alert('Google sign-in failed: ' + error.message)
-  }
+        redirectTo: "http://localhost:3000/auth/callback",
+      },
+    });
+    if (error) alert("Google sign-in failed: " + error.message);
+  };
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setSuccessMsg(null);
 
     if (!targetCompany) {
       setError("Please select a target company.");
@@ -99,7 +101,7 @@ export default function SignupPage() {
 
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signUp({
+    const signupPayload = {
       email,
       password,
       options: {
@@ -109,9 +111,18 @@ export default function SignupPage() {
           target_company: targetCompany,
         },
       },
-    });
+    };
+
+    console.log({ email, password });
+    console.log("Signup Request Payload:", { ...signupPayload, password: "***" });
+
+    const { data, error } = await supabase.auth.signUp(signupPayload);
+
+    console.log("SIGNUP DATA", data);
+    console.log("SIGNUP ERROR", error);
 
     if (error) {
+      console.error("Signup Error:", error);
       setError(error.message);
       setLoading(false);
       return;
@@ -123,7 +134,10 @@ export default function SignupPage() {
       return;
     }
 
-    setError("Check your email to confirm your account before logging in.");
+    if (data.user && !data.session) {
+      setSuccessMsg("Check your email to confirm your account before logging in.");
+    }
+    
     setLoading(false);
   }
 
@@ -143,14 +157,14 @@ export default function SignupPage() {
           <p className="mt-2 text-sm text-zinc-400">3 free interview sessions every week</p>
 
           {error && (
-            <div
-              className={`mt-4 rounded-lg border px-4 py-3 text-sm ${
-                error.includes("Check your email")
-                  ? "border-[#FF6B2B]/30 bg-[#FF6B2B]/10 text-[#FF6B2B]"
-                  : "border-red-500/30 bg-red-500/10 text-red-400"
-              }`}
-            >
+            <div className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
               {error}
+            </div>
+          )}
+
+          {successMsg && (
+            <div className="mt-4 rounded-lg border border-[#FF6B2B]/30 bg-[#FF6B2B]/10 px-4 py-3 text-sm text-[#FF6B2B]">
+              {successMsg}
             </div>
           )}
 

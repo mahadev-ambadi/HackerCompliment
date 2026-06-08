@@ -31,7 +31,7 @@ export default function SessionTracker({ userId }: { userId: string }) {
     bgClass = "bg-yellow-500";
   }
 
-  const isUnlimited = bonus_credits > 0 && bonus_credits >= 999;
+  const isUnlimited = sessionInfo.isUnlimitedPlan || false;
 
   return (
     <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">

@@ -1,6 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+// Bypass corporate proxy SSL MITM blocking Node.js database connections
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 export async function createClient() {
   const cookieStore = await cookies();
 

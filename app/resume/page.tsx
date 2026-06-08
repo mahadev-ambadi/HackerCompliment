@@ -228,10 +228,18 @@ export default function ResumePage() {
     setPreviousScore(null);
     setTargetRole('Software Engineer');
     setTargetCompany('TCS');
+    setResumeText(null);
+    setJdMatchData(null);
+    setJdFile(null);
+    setJdText('');
+    setError(null);
     
-    // Reset file input
-    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-    if (fileInput) fileInput.value = '';
+    // Reset all file inputs
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    fileInputs.forEach((input) => {
+      (input as HTMLInputElement).value = '';
+    });
+    
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (jdFileInputRef.current) jdFileInputRef.current.value = "";
     
@@ -338,48 +346,9 @@ export default function ResumePage() {
   async function handleApplyFixes() {
     if (!fixData || !resumeText || !analysis) return;
 
-    const rebuiltResume = `
-CONTACT
-${resumeText.match(/[\w.]+@[\w.]+/)?.[0] || ''}
-${resumeText.match(/\+?[\d\s\-]{10,}/)?.[0] || ''}
-
-PROFESSIONAL SUMMARY
-${fixData.professionalSummary}
-
-TECHNICAL SKILLS
-${fixData.skillsToAdd.join(', ')}
-
-EXPERIENCE & PROJECTS
-${fixData.beforeAfterBullets.map((b: any) => `${b.section}\n• ${b.after}`).join('\n\n')}
-
-EDUCATION
-${resumeText.split('\n').filter(line => 
-  line.toLowerCase().includes('university') ||
-  line.toLowerCase().includes('college') ||
-  line.toLowerCase().includes('b.tech') ||
-  line.toLowerCase().includes('gpa') ||
-  line.toLowerCase().includes('cgpa') ||
-  line.toLowerCase().includes('%')
-).join('\n')}
-
-CERTIFICATIONS
-${resumeText.split('\n').filter(line =>
-  line.toLowerCase().includes('certif') ||
-  line.toLowerCase().includes('aws') ||
-  line.toLowerCase().includes('cisco') ||
-  line.toLowerCase().includes('course')
-).join('\n')}
-
-ACHIEVEMENTS
-${resumeText.split('\n').filter(line =>
-  line.toLowerCase().includes('award') ||
-  line.toLowerCase().includes('honour') ||
-  line.toLowerCase().includes('achiev') ||
-  line.toLowerCase().includes('volunteer') ||
-  line.toLowerCase().includes('won') ||
-  line.toLowerCase().includes('rank')
-).join('\n')}
-`.trim();
+    // Use the comprehensive AI-rebuilt resume text if available,
+    // otherwise fallback to the original text (so it doesn't fail parsing)
+    const rebuiltResume = fixData.fullRewrittenResumeText || resumeText;
 
     setRebuiltResumeText(rebuiltResume);
   }
@@ -422,15 +391,26 @@ ${resumeText.split('\n').filter(line =>
     <div className="min-h-full bg-[#09090b]">
       <header className="border-b border-zinc-800">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href="/dashboard" className="text-lg font-bold tracking-tight">
-            <span className="text-[#FF6B2B]">Hacker</span>
-            <span className="text-white">Compliment</span>
-          </Link>
-          <span className="text-xs text-zinc-500 sm:text-sm">Resume Analyzer</span>
+          <div className="flex items-center gap-4">
+            <Link href="/dashboard" className="text-lg font-bold tracking-tight">
+              <span className="text-[#FF6B2B]">Hacker</span>
+              <span className="text-white">Compliment</span>
+            </Link>
+            <span className="text-xs text-zinc-500 sm:text-sm">Resume Analyzer</span>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+      <main className="py-8 sm:py-12">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 mb-6">
+          <Link
+            href="/dashboard"
+            className="inline-block rounded-xl bg-[#FF6B2B] px-5 py-2 text-sm font-bold text-black transition-all hover:scale-[1.02] hover:brightness-110"
+          >
+            &larr; Back
+          </Link>
+        </div>
+        <div className="mx-auto max-w-4xl px-4 sm:px-6">
         {step === "upload" && (
           <div className="mb-8 flex justify-center">
             <div className="flex gap-2 rounded-xl border border-zinc-800 bg-zinc-900/50 p-1">
@@ -457,6 +437,14 @@ ${resumeText.split('\n').filter(line =>
             </div>
           </div>
         )}
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/pdf,.pdf"
+          className="hidden"
+          onChange={(e) => validateAndSetFile(e.target.files?.[0] ?? null)}
+        />
 
         {step === "upload" && activeTab === "analyze" && (
           <div className="transition-opacity duration-300">
@@ -495,13 +483,6 @@ ${resumeText.split('\n').filter(line =>
                     {file.name}
                   </p>
                 )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="application/pdf,.pdf"
-                  className="hidden"
-                  onChange={(e) => validateAndSetFile(e.target.files?.[0] ?? null)}
-                />
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -687,21 +668,23 @@ ${resumeText.split('\n').filter(line =>
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={handleJDMatch}
-              disabled={jdMatching || !file || (jdInputType === 'paste' && !jdText) || (jdInputType === 'upload' && !jdFile)}
-              className="mt-6 w-full rounded-xl bg-[#FF6B2B] py-4 text-base font-bold text-black transition-all duration-200 hover:scale-105 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {jdMatching ? (
-                <span className="flex items-center justify-center gap-3">
-                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-black/30 border-t-black" />
-                  Analyzing match...
-                </span>
-              ) : (
-                "Analyze Match"
-              )}
-            </button>
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={handleJDMatch}
+                disabled={jdMatching || !file || (jdInputType === 'paste' && !jdText) || (jdInputType === 'upload' && !jdFile)}
+                className="w-full rounded-xl bg-[#FF6B2B] py-4 text-base font-bold text-black transition-all duration-200 hover:scale-105 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {jdMatching ? (
+                  <span className="flex items-center justify-center gap-3">
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+                    Analyzing match...
+                  </span>
+                ) : (
+                  "Analyze Match"
+                )}
+              </button>
+            </div>
           </div>
         )}
 
@@ -1155,6 +1138,7 @@ ${resumeText.split('\n').filter(line =>
             </div>
           </div>
         )}
+        </div>
       </main>
     </div>
   );

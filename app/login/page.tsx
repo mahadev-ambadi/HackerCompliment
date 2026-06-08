@@ -64,7 +64,7 @@ export default function LoginPage() {
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -74,30 +74,44 @@ function LoginContent() {
 
   const handleGoogleSignup = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
-    })
-    if (error) alert('Google sign-in failed: ' + error.message)
-  }
+        redirectTo: "http://localhost:3000/auth/callback",
+      },
+    });
+    if (error) alert("Google sign-in failed: " + error.message);
+  };
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
-      setError(error.message);
+      console.log("Login result:", { data, error });
+
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+
+      if (!data?.session) {
+        setError("Login succeeded but no session was created. Please confirm your email.");
+        setLoading(false);
+        return;
+      }
+
+      console.log("Session found, redirecting...");
+      window.location.replace('/dashboard');
+
+    } catch (err: any) {
+      console.error("Caught error:", err);
+      setError(err.message || "Unexpected error.");
       setLoading(false);
-      return;
     }
-
-    const redirect = searchParams.get('redirect') || '/dashboard';
-    router.push(redirect);
-    router.refresh();
   }
 
   return (
