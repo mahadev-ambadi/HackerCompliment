@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createBrowserClient } from "@supabase/ssr";
 
 export default function ShareExperiencePage() {
   const [content, setContent] = useState("");
@@ -10,7 +10,10 @@ export default function ShareExperiencePage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const supabase = createClient();
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,8 +48,9 @@ export default function ShareExperiencePage() {
       <header className="border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-md sticky top-0 z-10">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-xl font-black text-white hover:text-[#FF6B2B] transition-colors">
-              HackerCompliment
+            <Link href="/dashboard" className="text-xl font-bold tracking-tight inline-block hover:opacity-80 transition-opacity">
+              <span className="text-[#FF6B2B]">Hacker</span>
+              <span className="text-white">Compliment</span>
             </Link>
             <span className="hidden sm:inline-block rounded-full bg-zinc-800 px-3 py-1 text-xs font-semibold text-zinc-300">
               Community

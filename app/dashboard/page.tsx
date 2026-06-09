@@ -102,8 +102,11 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-full bg-[#09090b]">
-      <header className="border-b border-zinc-800">
+    <div 
+      className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed text-white font-sans selection:bg-[#FF6B2B]/30"
+      style={{ backgroundImage: "url('/bg5.jpg')" }}
+    >
+      <header className="border-b border-zinc-800 bg-black/60 backdrop-blur-md sticky top-0 z-50">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link href="/" className="text-lg font-bold tracking-tight">
             <span className="text-[#FF6B2B]">Hacker</span>
@@ -120,15 +123,15 @@ export default async function DashboardPage() {
 
       <main className="mx-auto max-w-6xl px-6 py-12">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-white">
+          <div className="inline-block bg-black/60 backdrop-blur-md px-6 py-4 rounded-2xl border border-zinc-700/50 shadow-xl">
+            <h1 className="text-3xl font-bold text-white drop-shadow-md">
               Welcome back, {displayName}!
             </h1>
-            <p className="mt-2 text-zinc-400">
+            <p className="mt-1 text-sm text-zinc-300 drop-shadow-sm">
               Ready to practice for your dream company interview?
             </p>
           </div>
-          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#FF6B2B]/30 bg-[#FF6B2B]/10 px-4 py-2 text-sm font-medium text-[#FF6B2B]">
+          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#FF6B2B]/50 bg-black/60 backdrop-blur-md px-4 py-2 text-sm font-bold text-[#FF6B2B] shadow-xl">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#FF6B2B] opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-[#FF6B2B]" />
@@ -138,7 +141,7 @@ export default async function DashboardPage() {
         </div>
 
         {recentSessions && recentSessions.length > 0 && (
-          <div className="mb-8 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+          <div className="mb-8 rounded-2xl border border-zinc-700 bg-black/60 p-6 shadow-2xl backdrop-blur-lg">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-white">Recent Interviews</h2>
               <Link
@@ -160,7 +163,7 @@ export default async function DashboardPage() {
                   <Link
                     key={session.id}
                     href="/history"
-                    className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-800/30 px-4 py-3 transition-colors hover:border-[#FF6B2B]/30"
+                    className="flex items-center justify-between rounded-xl border border-zinc-700 bg-black/40 px-4 py-3 transition-colors hover:border-[#FF6B2B]/50 hover:bg-black/60"
                   >
                     <div>
                       <p className="font-medium text-white">
@@ -192,7 +195,7 @@ export default async function DashboardPage() {
             return (
               <div
                 key={card.title}
-                className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6"
+                className="flex flex-col rounded-2xl border border-zinc-700 bg-black/60 p-6 shadow-2xl backdrop-blur-lg transition-transform hover:-translate-y-1"
               >
                 <h2 className="text-lg font-semibold text-white">{card.title}</h2>
                 <p className="mt-2 flex-1 text-sm leading-relaxed text-zinc-400">
@@ -214,9 +217,9 @@ export default async function DashboardPage() {
         </div>
 
         {isAdminUser && (
-          <div className="mt-8 rounded-2xl border border-[#FF6B2B]/30 bg-zinc-900/40 p-6 shadow-[0_0_15px_rgba(255,107,43,0.05)]">
+          <div className="mt-8 rounded-2xl border border-[#FF6B2B]/50 bg-black/70 backdrop-blur-lg p-6 shadow-[0_0_20px_rgba(255,107,43,0.15)]">
             <div className="mb-6">
-              <span className="inline-block mb-2 rounded-full bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-400 border border-red-500/20">
+              <span className="inline-block mb-2 rounded-full bg-red-500/20 px-3 py-1 text-xs font-bold text-red-400 border border-red-500/40 drop-shadow-md">
                 Admin Area
               </span>
               <h2 className="text-xl font-bold text-white">Admin Panel</h2>
@@ -224,19 +227,19 @@ export default async function DashboardPage() {
             <div className="grid gap-4 sm:grid-cols-3">
               <Link
                 href="/admin/review"
-                className="flex items-center justify-center rounded-xl border border-zinc-700 bg-zinc-800/50 py-4 text-sm font-semibold text-white transition-all hover:border-[#FF6B2B]/50 hover:bg-zinc-800"
+                className="flex items-center justify-center rounded-xl border border-zinc-600 bg-black/60 backdrop-blur-md py-4 text-sm font-semibold text-white transition-all hover:border-[#FF6B2B]/60 hover:bg-black/80 shadow-md"
               >
                 Review Questions
               </Link>
               <Link
                 href="/admin/problems"
-                className="flex items-center justify-center rounded-xl border border-zinc-700 bg-zinc-800/50 py-4 text-sm font-semibold text-white transition-all hover:border-[#FF6B2B]/50 hover:bg-zinc-800"
+                className="flex items-center justify-center rounded-xl border border-zinc-600 bg-black/60 backdrop-blur-md py-4 text-sm font-semibold text-white transition-all hover:border-[#FF6B2B]/60 hover:bg-black/80 shadow-md"
               >
                 Review Problems
               </Link>
               <Link
                 href="/admin/analytics"
-                className="flex items-center justify-center rounded-xl border border-[#FF6B2B]/30 bg-[#FF6B2B]/10 py-4 text-sm font-semibold text-[#FF6B2B] transition-all hover:bg-[#FF6B2B]/20"
+                className="flex items-center justify-center rounded-xl border border-[#FF6B2B]/50 bg-black/60 backdrop-blur-md py-4 text-sm font-bold text-[#FF6B2B] transition-all hover:bg-black/80 hover:border-[#FF6B2B] shadow-md"
               >
                 View Analytics
               </Link>

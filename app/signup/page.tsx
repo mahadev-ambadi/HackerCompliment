@@ -63,7 +63,7 @@ function Divider() {
 }
 
 const inputClass =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-800/50 px-4 py-3 text-sm text-white placeholder-zinc-500 outline-none transition-colors focus:border-[#FF6B2B]/50 focus:ring-1 focus:ring-[#FF6B2B]/30";
+  "w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 text-sm text-white placeholder-zinc-500 outline-none transition-colors focus:border-[#FF6B2B]/50 focus:ring-1 focus:ring-[#FF6B2B]/30";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -142,18 +142,20 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="relative flex min-h-full flex-col items-center justify-center px-4 py-12">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-1/2 top-0 h-[400px] w-[600px] -translate-x-1/2 rounded-full bg-[#FF6B2B]/10 blur-[120px]" />
-      </div>
+    <div 
+      className="relative flex h-screen overflow-hidden flex-col items-center justify-center px-4 pt-0 pb-4 bg-cover bg-center bg-no-repeat bg-fixed text-white font-sans selection:bg-[#FF6B2B]/30"
+      style={{ backgroundImage: "url('/bg6.jpg')" }}
+    >
 
       <div className="relative w-full max-w-md">
-        <div className="mb-8 text-center">
-          <Logo />
+        <div className="mb-4 text-center flex justify-center">
+          <div className="inline-block bg-black/60 backdrop-blur-md px-8 py-3 rounded-2xl border border-zinc-700/50 shadow-xl">
+            <Logo />
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 shadow-xl backdrop-blur-sm">
-          <h1 className="text-2xl font-bold text-white">Start Your Free Journey</h1>
+        <div className="rounded-2xl border border-zinc-700 bg-black/70 p-4 sm:p-6 shadow-2xl backdrop-blur-lg">
+          <h1 className="text-2xl font-bold text-white drop-shadow-md">Start Your Free Journey</h1>
           <p className="mt-2 text-sm text-zinc-400">3 free interview sessions every week</p>
 
           {error && (
@@ -180,9 +182,16 @@ export default function SignupPage() {
             </button>
           </div>
 
-          <Divider />
+          <div className="relative my-3 sm:my-4">
+      <div className="absolute inset-0 flex items-center">
+        <div className="w-full border-t border-zinc-800" />
+      </div>
+      <div className="relative flex justify-center text-xs uppercase tracking-wide">
+        <span className="bg-zinc-900/80 px-3 text-zinc-500">or continue with email</span>
+      </div>
+    </div>
 
-          <form className="space-y-4" onSubmit={handleSignup}>
+          <form className="space-y-3" onSubmit={handleSignup}>
             <div>
               <label htmlFor="fullName" className="mb-1.5 block text-sm font-medium text-zinc-300">
                 Full Name
@@ -284,9 +293,9 @@ export default function SignupPage() {
           </form>
         </div>
 
-        <p className="mt-6 text-center text-sm text-zinc-400">
+        <p className="mt-4 text-center text-sm text-zinc-300 drop-shadow-sm bg-black/60 backdrop-blur-md px-4 py-2 rounded-xl border border-zinc-700/50 w-fit mx-auto shadow-xl">
           Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-[#FF6B2B] hover:text-[#FF6B2B]">
+          <Link href="/login" className="font-bold text-[#FF6B2B] hover:text-[#FF6B2B] transition-colors">
             Login
           </Link>
         </p>

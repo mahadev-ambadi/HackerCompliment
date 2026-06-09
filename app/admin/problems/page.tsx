@@ -165,8 +165,12 @@ export default function AdminProblemsPage() {
     <div className="min-h-screen bg-zinc-950 text-white font-sans selection:bg-[#FF6B2B]/30">
       <header className="border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-md sticky top-0 z-10 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="text-xl font-black hover:text-[#FF6B2B] transition-colors">
-            HackerCompliment Admin
+          <Link href="/dashboard" className="text-xl font-bold tracking-tight inline-block hover:opacity-80 transition-opacity flex items-center gap-2">
+            <div>
+              <span className="text-[#FF6B2B]">Hacker</span>
+              <span className="text-white">Compliment</span>
+            </div>
+            <span className="text-zinc-500 font-normal">Admin</span>
           </Link>
           <span className="rounded-full bg-[#FF6B2B]/10 border border-[#FF6B2B]/20 px-3 py-1 text-xs font-semibold text-[#FF6B2B]">
             Problem Review ({problems.length} pending)

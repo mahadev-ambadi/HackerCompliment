@@ -87,7 +87,7 @@ function CircularScore({ score }: { score: number }) {
 }
 
 const selectClass =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-800/50 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#FF6B2B]/50 focus:ring-1 focus:ring-[#FF6B2B]/30 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3E%3Cpath stroke=%27%239ca3af%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27m6 8 4 4 4-4%27/%3E%3C/svg%3E')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10";
+  "w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#FF6B2B]/50 focus:ring-1 focus:ring-[#FF6B2B]/30 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3E%3Cpath stroke=%27%239ca3af%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27m6 8 4 4 4-4%27/%3E%3C/svg%3E')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10";
 
 export default function ResumePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -388,8 +388,11 @@ export default function ResumePage() {
   }
 
   return (
-    <div className="min-h-full bg-[#09090b]">
-      <header className="border-b border-zinc-800">
+    <div 
+      className="h-screen overflow-hidden font-sans text-white flex flex-col bg-cover bg-center bg-no-repeat bg-fixed"
+      style={{ backgroundImage: "url('/bg3.jpg')" }}
+    >
+      <header className="border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-4">
             <Link href="/dashboard" className="text-lg font-bold tracking-tight">
@@ -401,8 +404,8 @@ export default function ResumePage() {
         </div>
       </header>
 
-      <main className="py-8 sm:py-12">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 mb-6">
+      <main className="flex-1 py-1 sm:py-2 overflow-y-auto custom-scrollbar">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 mb-2">
           <Link
             href="/dashboard"
             className="inline-block rounded-xl bg-[#FF6B2B] px-5 py-2 text-sm font-bold text-black transition-all hover:scale-[1.02] hover:brightness-110"
@@ -412,14 +415,14 @@ export default function ResumePage() {
         </div>
         <div className="mx-auto max-w-4xl px-4 sm:px-6">
         {step === "upload" && (
-          <div className="mb-8 flex justify-center">
-            <div className="flex gap-2 rounded-xl border border-zinc-800 bg-zinc-900/50 p-1">
+          <div className="mb-4 flex justify-center">
+            <div className="flex gap-2 rounded-xl border border-zinc-700 bg-black/70 backdrop-blur-md p-1 shadow-xl">
               <button
                 onClick={() => setActiveTab('analyze')}
                 className={`rounded-lg px-6 py-2 transition-colors ${
                   activeTab === 'analyze'
-                    ? "bg-[#FF6B2B] font-bold text-black"
-                    : "text-zinc-400 hover:text-white"
+                    ? "bg-[#FF6B2B] font-bold text-black shadow-md"
+                    : "text-zinc-300 font-medium hover:text-white"
                 }`}
               >
                 📄 Resume Analyzer
@@ -428,8 +431,8 @@ export default function ResumePage() {
                 onClick={() => setActiveTab('jdmatch')}
                 className={`rounded-lg px-6 py-2 transition-colors ${
                   activeTab === 'jdmatch'
-                    ? "bg-[#FF6B2B] font-bold text-black"
-                    : "text-zinc-400 hover:text-white"
+                    ? "bg-[#FF6B2B] font-bold text-black shadow-md"
+                    : "text-zinc-300 font-medium hover:text-white"
                 }`}
               >
                 🎯 JD Match
@@ -447,15 +450,15 @@ export default function ResumePage() {
         />
 
         {step === "upload" && activeTab === "analyze" && (
-          <div className="transition-opacity duration-300">
-            <div className="mb-8 text-center">
-              <h1 className="text-3xl font-bold text-white sm:text-4xl">AI Resume Analyzer</h1>
-              <p className="mt-2 text-zinc-400">
+          <div className="transition-opacity duration-300 flex flex-col items-center">
+            <div className="mb-3 text-center inline-block bg-black/60 backdrop-blur-md px-6 py-3 rounded-2xl border border-zinc-800/50">
+              <h1 className="text-3xl font-bold text-white sm:text-4xl drop-shadow-md">AI Resume Analyzer</h1>
+              <p className="mt-1 text-sm text-zinc-300 drop-shadow-sm">
                 Find out if your resume will pass ATS screening
               </p>
             </div>
 
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 sm:p-8">
+            <div className="w-full rounded-2xl border border-zinc-700 bg-black/70 backdrop-blur-lg p-5 sm:p-6 shadow-2xl">
               {error && (
                 <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
                   {error}
@@ -495,7 +498,7 @@ export default function ResumePage() {
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="targetRole" className="mb-2 block text-sm font-medium text-zinc-300">
+                  <label htmlFor="targetRole" className="mb-1.5 block text-sm font-semibold text-zinc-100">
                     Target Role
                   </label>
                   <select
@@ -515,7 +518,7 @@ export default function ResumePage() {
                 <div>
                   <label
                     htmlFor="targetCompany"
-                    className="mb-2 block text-sm font-medium text-zinc-300"
+                    className="mb-1.5 block text-sm font-semibold text-zinc-100"
                   >
                     Target Company
                   </label>
@@ -555,17 +558,17 @@ export default function ResumePage() {
         )}
 
         {step === "upload" && activeTab === "jdmatch" && (
-          <div className="transition-opacity duration-300">
-            <div className="mb-8 text-center">
-              <h1 className="text-3xl font-bold text-white sm:text-4xl">JD Match</h1>
-              <p className="mt-2 text-zinc-400">
+          <div className="transition-opacity duration-300 flex flex-col items-center">
+            <div className="mb-3 text-center inline-block bg-black/60 backdrop-blur-md px-6 py-3 rounded-2xl border border-zinc-800/50">
+              <h1 className="text-3xl font-bold text-white sm:text-4xl drop-shadow-md">JD Match</h1>
+              <p className="mt-1 text-sm text-zinc-300 drop-shadow-sm">
                 Compare your resume against a specific job description
               </p>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2 w-full">
               {/* Left: Resume Upload */}
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+              <div className="rounded-2xl border border-zinc-700 bg-black/70 backdrop-blur-lg p-6 shadow-2xl">
                 <h3 className="mb-4 text-lg font-semibold text-white">Upload Your Resume (PDF)</h3>
                 <div
                   onDragOver={(e) => {
@@ -600,7 +603,7 @@ export default function ResumePage() {
               </div>
 
               {/* Right: JD Input */}
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+              <div className="rounded-2xl border border-zinc-700 bg-black/70 backdrop-blur-lg p-6 shadow-2xl">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-white">Job Description</h3>
                   <div className="flex gap-1 rounded-lg bg-zinc-800 p-1">

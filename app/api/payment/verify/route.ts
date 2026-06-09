@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     let toAdd = 0;
     if (plan === 'basic') toAdd = 3;
     if (plan === 'standard') toAdd = 8;
-    if (plan === 'boost' || plan === 'pro') toAdd = 999;
+    if (plan === 'boost' || plan === 'pro') toAdd = 0; // Time-based unlimited plan, handled by session limit API
 
     if (toAdd > 0) {
       const weekStart = getWeekStart();

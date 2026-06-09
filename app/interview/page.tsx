@@ -220,7 +220,7 @@ function getScoreBorder(score: number) {
 }
 
 const inputClass =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-800/50 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#FF6B2B]/50 focus:ring-1 focus:ring-[#FF6B2B]/30 disabled:cursor-not-allowed disabled:opacity-60";
+  "w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-2.5 text-sm text-white outline-none transition-colors focus:border-[#FF6B2B]/50 focus:ring-1 focus:ring-[#FF6B2B]/30 disabled:cursor-not-allowed disabled:opacity-60";
 
 const selectClass = `${inputClass} cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3E%3Cpath stroke=%27%239ca3af%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27m6 8 4 4 4-4%27/%3E%3C/svg%3E')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10`;
 
@@ -242,7 +242,7 @@ function OptionButtons<T extends string>({
           onClick={() => onSelect(option)}
           className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${selected === option
               ? "border-[#FF6B2B] bg-[#FF6B2B]/15 text-[#FF6B2B]"
-              : "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white"
+              : "border-zinc-700 bg-zinc-950/80 text-zinc-300 hover:border-zinc-600 hover:bg-zinc-800 hover:text-white"
             }`}
         >
           {option}
@@ -694,8 +694,11 @@ export default function InterviewPage() {
       : "Listening for your answer";
 
   return (
-    <div className="min-h-full bg-[#09090b]">
-      <header className="border-b border-zinc-800">
+    <div 
+      className="h-screen overflow-hidden font-sans text-white flex flex-col bg-cover bg-center bg-no-repeat bg-fixed"
+      style={{ backgroundImage: "url('/bg4.jpg')" }}
+    >
+      <header className="border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-4">
             <Link href="/dashboard" className="text-lg font-bold tracking-tight">
@@ -709,8 +712,8 @@ export default function InterviewPage() {
         </div>
       </header>
 
-      <main className="py-8 sm:py-12">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 mb-6">
+      <main className="flex-1 pt-0 pb-2 sm:pt-1">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 mb-1">
           <Link
             href="/dashboard"
             className="inline-block rounded-xl bg-[#FF6B2B] px-5 py-2 text-sm font-bold text-black transition-all hover:scale-[1.02] hover:brightness-110"
@@ -720,19 +723,19 @@ export default function InterviewPage() {
         </div>
         {step === "setup" && (
           <div className="mx-auto max-w-xl transition-opacity duration-300">
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 shadow-xl backdrop-blur-sm sm:p-8">
-              <h1 className="text-2xl font-bold text-white sm:text-3xl">
+            <div className="rounded-2xl border border-zinc-700 bg-black/70 p-4 shadow-2xl backdrop-blur-lg sm:p-5">
+              <h1 className="text-2xl font-bold text-white sm:text-3xl drop-shadow-md">
                 Configure Technical Round
               </h1>
-              <p className="mt-2 text-sm text-zinc-400">
+              <p className="mt-1 text-sm text-zinc-300 drop-shadow-sm">
                 Set up your technical round — 20 questions with real AI evaluation.
               </p>
 
-              <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#FF6B2B]/30 bg-[#FF6B2B]/10 px-4 py-1.5 text-sm font-medium text-[#FF6B2B]">
+              <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-[#FF6B2B]/30 bg-[#FF6B2B]/10 px-4 py-1.5 text-sm font-medium text-[#FF6B2B]">
                 {sessionsLoading ? (
                   "Loading session usage..."
                 ) : isUnlimitedPlan ? (
-                  <>Unlimited Access</>
+                  <>{sessionInfo?.unlimitedLabel || "Unlimited Access"}</>
                 ) : (
                   <>
                     {Math.min(sessionsUsed, sessionLimit)} of {sessionLimit} {planName === 'free' ? 'free ' : ''}sessions used{planName === 'free' ? ' this week' : ''}
@@ -740,9 +743,9 @@ export default function InterviewPage() {
                 )}
               </div>
 
-              <div className="mt-8 space-y-6">
+              <div className="mt-3 space-y-3">
                 <div className="relative">
-                  <label htmlFor="company" className="mb-2 block text-sm font-medium text-zinc-300">
+                  <label htmlFor="company" className="mb-1.5 block text-sm font-semibold text-zinc-100">
                     Company
                   </label>
                   <input
@@ -783,7 +786,7 @@ export default function InterviewPage() {
                 </div>
 
                 <div className="relative">
-                  <label htmlFor="role" className="mb-2 block text-sm font-medium text-zinc-300">
+                  <label htmlFor="role" className="mb-1.5 block text-sm font-semibold text-zinc-100">
                     Role
                   </label>
                   <input
@@ -824,7 +827,7 @@ export default function InterviewPage() {
                 </div>
 
                 <div>
-                  <p className="mb-2 text-sm font-medium text-zinc-300">Interview Type</p>
+                  <p className="mb-1.5 text-sm font-semibold text-zinc-100">Interview Type</p>
                   <OptionButtons
                     options={interviewTypes}
                     selected={interviewType}
@@ -833,7 +836,7 @@ export default function InterviewPage() {
                 </div>
 
                 <div>
-                  <p className="mb-2 text-sm font-medium text-zinc-300">Experience Level</p>
+                  <p className="mb-1.5 text-sm font-semibold text-zinc-100">Experience Level</p>
                   <OptionButtons
                     options={experienceLevels}
                     selected={experienceLevel}
@@ -862,12 +865,12 @@ export default function InterviewPage() {
                   </div>
                 )}
 
-                <div className={shouldBlockInterview ? "pt-2" : "pt-4"}>
+                <div className="pt-2">
                   <button
                     type="button"
                     onClick={shouldBlockInterview ? undefined : handleStartInterview}
                     disabled={shouldBlockInterview || sessionsLoading || generatingQuestions}
-                    className={`w-full rounded-xl py-4 text-base font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${shouldBlockInterview
+                    className={`w-full rounded-xl py-3 text-base font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${shouldBlockInterview
                         ? "bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-60"
                         : "bg-[#FF6B2B] text-black hover:scale-105 hover:brightness-110"
                       }`}
@@ -878,7 +881,7 @@ export default function InterviewPage() {
                         Loading Questions...
                       </>
                     ) : (
-                      "Start Interview"
+                      "Start test"
                     )}
                   </button>
                 </div>

@@ -7,16 +7,30 @@ export default function CodingPracticeCard({ userId }: { userId: string }) {
   const [sessionsUsed, setSessionsUsed] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!userId) return;
-    
-    fetch(`/api/coding-session-limit?userId=${userId}`, { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data) => setSessionsUsed(data.sessions_used || 0))
-      .catch((err) => console.error("Failed to fetch coding sessions", err));
-  }, [userId]);
+    async function fetchInfo() {
+      const { createClient } = await import("@/lib/supabase");
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const headers: HeadersInit = {};
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+
+      fetch("/api/coding-session-limit", { headers })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.error) throw new Error(data.error);
+          setSessionsUsed(data.sessions_used || 0);
+        })
+        .catch((err) => console.error("Failed to fetch coding session info", err));
+    }
+
+    fetchInfo();
+  }, []);
 
   return (
-    <div className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+    <div className="flex flex-col rounded-2xl border border-zinc-700 bg-black/60 p-6 shadow-2xl backdrop-blur-lg transition-transform hover:-translate-y-1">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
           <svg className="w-5 h-5 text-[#FF6B2B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">

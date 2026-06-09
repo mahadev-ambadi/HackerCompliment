@@ -9,10 +9,26 @@ export default function SessionTracker({ userId }: { userId: string }) {
   useEffect(() => {
     if (!userId) return;
     
-    fetch(`/api/session-limit?userId=${userId}`)
-      .then((res) => res.json())
-      .then((data) => setSessionInfo(data))
-      .catch((err) => console.error("Failed to fetch session info", err));
+    async function fetchInfo() {
+      const { createClient } = await import("@/lib/supabase");
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const headers: HeadersInit = {};
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+
+      fetch(`/api/session-limit?userId=${userId}`, { headers })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.error) throw new Error(data.error);
+          setSessionInfo(data);
+        })
+        .catch((err) => console.error("Failed to fetch session info", err));
+    }
+
+    fetchInfo();
   }, [userId]);
 
   if (!sessionInfo) return null;
@@ -34,7 +50,7 @@ export default function SessionTracker({ userId }: { userId: string }) {
   const isUnlimited = sessionInfo.isUnlimitedPlan || false;
 
   return (
-    <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
+    <div className="mb-6 rounded-xl border border-zinc-700 bg-black/60 p-4 shadow-2xl backdrop-blur-lg transition-all hover:bg-black/70">
       {isUnlimited ? (
         <div className="flex items-center justify-between">
           <span className="text-sm text-zinc-400">Session Access</span>

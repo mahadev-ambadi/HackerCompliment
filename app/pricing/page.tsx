@@ -156,10 +156,14 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen bg-[#09090b] text-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
+        <div className="mb-8 flex flex-col items-start gap-4">
+          <Link href="/" className="text-2xl font-bold tracking-tight inline-block">
+            <span className="text-[#FF6B2B]">Hacker</span>
+            <span className="text-white">Compliment</span>
+          </Link>
           <Link
             href="/dashboard"
-            className="inline-flex items-center text-sm text-zinc-400 hover:text-[#FF6B2B] transition-colors"
+            className="inline-block rounded-xl bg-[#FF6B2B] px-5 py-2 text-sm font-bold text-black transition-all hover:scale-[1.02] hover:brightness-110"
           >
             <span className="mr-2">←</span> Back to Dashboard
           </Link>

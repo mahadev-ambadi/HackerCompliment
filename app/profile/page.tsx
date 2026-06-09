@@ -162,7 +162,21 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-zinc-950 px-4 py-12 md:px-8">
       <div className="mx-auto max-w-5xl space-y-8">
-        
+        <div className="mb-4">
+          <Link href="/" className="text-xl font-bold tracking-tight inline-block mb-2">
+            <span className="text-[#FF6B2B]">Hacker</span>
+            <span className="text-white">Compliment</span>
+          </Link>
+          <div className="mt-1">
+            <Link
+              href="/dashboard"
+              className="inline-block rounded-xl bg-[#FF6B2B] px-5 py-2 text-sm font-bold text-black transition-all hover:scale-[1.02] hover:brightness-110"
+            >
+              <span className="mr-2">←</span> Back to Dashboard
+            </Link>
+          </div>
+        </div>
+
         {/* 1. TOP PROFILE CARD */}
         <div className="flex flex-col items-center gap-6 rounded-3xl border border-zinc-800 bg-zinc-900 p-8 md:flex-row md:items-start">
           <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-[#FF6B2B] text-3xl font-bold text-white shadow-lg">

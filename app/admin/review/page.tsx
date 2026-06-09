@@ -162,8 +162,9 @@ export default function AdminReviewPage() {
       <header className="border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-md sticky top-0 z-10">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-xl font-black text-white hover:text-[#FF6B2B] transition-colors">
-              HackerCompliment
+            <Link href="/dashboard" className="text-xl font-bold tracking-tight inline-block hover:opacity-80 transition-opacity">
+              <span className="text-[#FF6B2B]">Hacker</span>
+              <span className="text-white">Compliment</span>
             </Link>
             <Link href="/admin/problems" className="text-sm text-zinc-400 hover:text-white transition-colors">
               Problems Queue

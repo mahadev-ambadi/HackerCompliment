@@ -29,6 +29,7 @@ export async function getSessionUsage(userId: string): Promise<SessionUsage> {
     .from("session_usage")
     .select("sessions_used, week_start")
     .eq("user_id", userId)
+    .eq("week_start", weekStart)
     .maybeSingle();
 
   if (error) {
@@ -55,22 +56,16 @@ export async function incrementSession(userId: string): Promise<SessionUsage> {
 
   const { data: existing, error: fetchError } = await supabase
     .from("session_usage")
-    .select("sessions_used, week_start")
+    .select("sessions_used, week_start, id")
     .eq("user_id", userId)
+    .eq("week_start", weekStart)
     .maybeSingle();
 
   if (fetchError) {
     throw fetchError;
   }
 
-  const storedWeek = existing?.week_start
-    ? String(existing.week_start).split("T")[0]
-    : null;
-
-  const sessionsUsed =
-    existing && storedWeek === weekStart
-      ? (existing.sessions_used ?? 0) + 1
-      : 1;
+  const sessionsUsed = existing ? (existing.sessions_used ?? 0) + 1 : 1;
 
   let dbError;
 
@@ -82,7 +77,8 @@ export async function incrementSession(userId: string): Promise<SessionUsage> {
         week_start: weekStart,
         updated_at: new Date().toISOString(),
       })
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .eq("id", existing.id);
     dbError = error;
   } else {
     const { error } = await supabase

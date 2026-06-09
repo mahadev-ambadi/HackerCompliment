@@ -1,6 +1,8 @@
+// Force turbopack recompile
 import { getWeekStart } from "@/lib/sessions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getApiUser } from "@/lib/supabase/api-auth";
+import { isAdmin } from "@/lib/admin";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +29,7 @@ export async function GET(request: Request) {
       hasPlan: status.hasPlan,
       planName: status.planName,
       isUnlimitedPlan: status.isUnlimitedPlan,
+      unlimitedLabel: status.unlimitedLabel,
       planDate: status.planDate,
       weekStart: getWeekStart(),
     });
@@ -81,7 +84,7 @@ async function incrementCodingSession(userId: string) {
     .select('*')
     .eq('user_id', userId)
     .eq('week_start', weekStartStr)
-    .single();
+    .maybeSingle();
 
   let sessionsUsed = 1;
 
@@ -118,7 +121,7 @@ async function canStartCoding(user: any) {
   // 1. Check if user has active paid plan
   const { data: purchaseData } = await supabase
     .from('purchases')
-    .select('status, plan, active, created_at')
+    .select('status, plan, created_at')
     .eq('user_id', userId)
     .neq('status', 'cancelled')
     .in('status', ['active', 'completed', 'Completed'])
@@ -126,7 +129,6 @@ async function canStartCoding(user: any) {
     .limit(1);
   const activePurchase = purchaseData && purchaseData.length > 0 ? purchaseData[0] : null;
   const planName = activePurchase ? activePurchase.plan.toLowerCase() : 'free';
-  const isUnlimitedPlan = planName === 'pro' || planName === 'boost';
 
   // 2. Fetch session usage & bonus credits from coding_sessions table
   const { data: usageData } = await supabase
@@ -141,19 +143,34 @@ async function canStartCoding(user: any) {
   
   const planDate = activePurchase ? activePurchase.created_at : null;
 
+  let isUnlimitedPlan = isAdmin(userId);
+  let unlimitedLabel = "Unlimited Access";
+
+  if (!isUnlimitedPlan && planDate) {
+    const daysSincePurchase = (new Date().getTime() - new Date(planDate).getTime()) / (1000 * 3600 * 24);
+    if (planName === 'boost' && daysSincePurchase <= 7) {
+      isUnlimitedPlan = true;
+      unlimitedLabel = "Unlimited access (7 days)";
+    } else if (planName === 'pro' && daysSincePurchase <= 30) {
+      isUnlimitedPlan = true;
+      unlimitedLabel = "Unlimited access (30 days)";
+    }
+  }
+
   if (isUnlimitedPlan) {
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[DEBUG] User ${userId} has unlimited paid plan: ${planName}`);
+      console.log(`[DEBUG] User ${userId} has unlimited access. Label: ${unlimitedLabel}`);
     }
     return {
       allowed: true,
-      reason: "Active paid plan",
+      reason: unlimitedLabel,
       hasPlan: true, 
       remainingSessions: Number.POSITIVE_INFINITY,
       sessions_used,
       bonus_credits,
       planName,
-      isUnlimitedPlan,
+      isUnlimitedPlan: true,
+      unlimitedLabel,
       planDate
     };
   }
@@ -171,6 +188,7 @@ async function canStartCoding(user: any) {
       bonus_credits,
       planName,
       isUnlimitedPlan: false,
+      unlimitedLabel: null,
       planDate
     };
   }
@@ -185,6 +203,7 @@ async function canStartCoding(user: any) {
       bonus_credits,
       planName,
       isUnlimitedPlan: false,
+      unlimitedLabel: null,
       planDate
     };
   }
@@ -202,6 +221,7 @@ async function canStartCoding(user: any) {
     bonus_credits,
     planName,
     isUnlimitedPlan: false,
+    unlimitedLabel: null,
     planDate
   };
 }
