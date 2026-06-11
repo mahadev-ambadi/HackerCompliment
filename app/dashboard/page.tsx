@@ -76,6 +76,7 @@ export default async function DashboardPage() {
     .limit(3);
 
   const displayName =
+    user.user_metadata?.display_name ||
     user.user_metadata?.full_name ||
     user.user_metadata?.name ||
     user.email?.split("@")[0] ||

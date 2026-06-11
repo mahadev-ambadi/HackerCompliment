@@ -73,26 +73,37 @@ export async function GET(request: Request) {
 
     // SOURCE 1 - Reddit r/leetcode
     try {
+      const sub = 'r/leetcode';
       const res = await fetch('https://www.reddit.com/r/leetcode/new.json?limit=25', { headers });
+      console.log(`${sub}: HTTP status ${res.status}`);
       if (res.ok) {
         const data = await res.json();
-        for (const child of data?.data?.children || []) {
+        const posts = data?.data?.children || [];
+        console.log(`${sub}: post count ${posts.length}`);
+        for (const child of posts) {
           const post = child.data;
-          const text = (post.selftext || '').toLowerCase();
+          const selftext = post.selftext || '';
+          const text = selftext.toLowerCase();
           const title = (post.title || '').toLowerCase();
-          
-          if (text.length < 150) continue;
           
           const keywords = ['problem', 'solution', 'approach', 'explain', 'how to'];
           const hasKeyword = keywords.some(k => title.includes(k) || text.includes(k));
           
-          if (hasKeyword) {
-            await insertProblem(
-              'Reddit (r/leetcode)',
-              `https://www.reddit.com${post.permalink}`,
-              `Title: ${post.title}\n\n${post.selftext}`
-            );
+          if (!hasKeyword) {
+            console.log(`Filtered out: ${post.title.substring(0, 50)}`);
+            continue;
           }
+
+          if (text.length < 150) {
+            console.log(`Too short (${selftext.length} chars): ${post.title.substring(0, 50)}`);
+            continue;
+          }
+          
+          await insertProblem(
+            'Reddit (r/leetcode)',
+            `https://www.reddit.com${post.permalink}`,
+            `Title: ${post.title}\n\n${post.selftext}`
+          );
         }
       }
     } catch (e) { /* skip silently */ }
@@ -101,26 +112,37 @@ export async function GET(request: Request) {
 
     // SOURCE 2 - Reddit r/cscareerquestions
     try {
+      const sub = 'r/cscareerquestions';
       const res = await fetch('https://www.reddit.com/r/cscareerquestions/new.json?limit=25', { headers });
+      console.log(`${sub}: HTTP status ${res.status}`);
       if (res.ok) {
         const data = await res.json();
-        for (const child of data?.data?.children || []) {
+        const posts = data?.data?.children || [];
+        console.log(`${sub}: post count ${posts.length}`);
+        for (const child of posts) {
           const post = child.data;
-          const text = (post.selftext || '').toLowerCase();
+          const selftext = post.selftext || '';
+          const text = selftext.toLowerCase();
           const title = (post.title || '').toLowerCase();
-          
-          if (text.length < 150) continue;
           
           const keywords = ['leetcode', 'dsa', 'coding round', 'oa', 'online assessment'];
           const hasKeyword = keywords.some(k => title.includes(k) || text.includes(k));
           
-          if (hasKeyword) {
-            await insertProblem(
-              'Reddit (r/cscareerquestions)',
-              `https://www.reddit.com${post.permalink}`,
-              `Title: ${post.title}\n\n${post.selftext}`
-            );
+          if (!hasKeyword) {
+            console.log(`Filtered out: ${post.title.substring(0, 50)}`);
+            continue;
           }
+
+          if (text.length < 150) {
+            console.log(`Too short (${selftext.length} chars): ${post.title.substring(0, 50)}`);
+            continue;
+          }
+          
+          await insertProblem(
+            'Reddit (r/cscareerquestions)',
+            `https://www.reddit.com${post.permalink}`,
+            `Title: ${post.title}\n\n${post.selftext}`
+          );
         }
       }
     } catch (e) { /* skip silently */ }

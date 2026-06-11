@@ -131,7 +131,7 @@ export default function PricingPage() {
           }
         },
         prefill: {
-          name: user.user_metadata?.full_name || "",
+          name: user.user_metadata?.display_name || user.user_metadata?.full_name || "",
           email: user.email || "",
         },
         theme: {

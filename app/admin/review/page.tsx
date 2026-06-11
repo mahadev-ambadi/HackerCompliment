@@ -110,7 +110,11 @@ export default function AdminReviewPage() {
   async function runIngest() {
     setIsIngesting(true);
     try {
-      await fetch("/api/cron/ingest");
+      await fetch("/api/admin/run-cron", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "ingest" })
+      });
       await fetchQueue();
     } catch (err) {
       console.error(err);
@@ -123,7 +127,11 @@ export default function AdminReviewPage() {
   async function runExtract() {
     setIsExtracting(true);
     try {
-      await fetch("/api/cron/extract");
+      await fetch("/api/admin/run-cron", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "extract" })
+      });
       await fetchQueue();
     } catch (err) {
       console.error(err);

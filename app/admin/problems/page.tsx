@@ -84,7 +84,11 @@ export default function AdminProblemsPage() {
   async function handleRunIngest() {
     setIsIngesting(true);
     try {
-      const res = await fetch("/api/cron/ingest-problems");
+      const res = await fetch("/api/admin/run-cron", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "ingest-problems" })
+      });
       const data = await res.json();
       alert(`Ingest complete. Inserted: ${data.inserted || 0}`);
     } catch (e) {
@@ -97,7 +101,11 @@ export default function AdminProblemsPage() {
   async function handleRunExtract() {
     setIsExtracting(true);
     try {
-      const res = await fetch("/api/cron/extract-problems");
+      const res = await fetch("/api/admin/run-cron", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "extract-problems" })
+      });
       const data = await res.json();
       alert(`Extract complete. Extracted: ${data.extracted || 0}, Skipped: ${data.skipped || 0}`);
       await fetchProblems(); // Refresh the list

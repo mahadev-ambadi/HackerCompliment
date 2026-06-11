@@ -118,7 +118,7 @@ export default function MockInterviewPage() {
       const { data } = await supabase.auth.getUser();
       if (data.user) {
         setUserId(data.user.id);
-        const fullName = data.user.user_metadata?.full_name || data.user.email || "Candidate";
+        const fullName = data.user.user_metadata?.display_name || data.user.user_metadata?.full_name || data.user.email || "Candidate";
         setFirstName(fullName.split(" ")[0]);
       }
     }

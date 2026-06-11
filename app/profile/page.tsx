@@ -47,7 +47,7 @@ export default function ProfilePage() {
       setUser(user);
       
       setProfile({
-        name: user.user_metadata?.full_name || "",
+        name: user.user_metadata?.display_name || user.user_metadata?.full_name || "",
         email: user.email || "",
         college: user.user_metadata?.college || "",
         targetCompany: user.user_metadata?.target_company || "",
@@ -114,17 +114,29 @@ export default function ProfilePage() {
     e.preventDefault();
     setSaving(true);
     
-    await supabase.auth.updateUser({
-      email: profile.email,
+    // Only update email if it changed from the original user email
+    const updatePayload: any = {
       data: {
+        display_name: profile.name,
         full_name: profile.name,
         college: profile.college,
         target_company: profile.targetCompany,
       }
-    });
+    };
+    
+    if (user?.email && profile.email !== user.email) {
+      updatePayload.email = profile.email;
+    }
+    
+    const { error } = await supabase.auth.updateUser(updatePayload);
     
     setSaving(false);
-    alert("Profile updated successfully!");
+    
+    if (error) {
+      alert("Error updating profile: " + error.message);
+    } else {
+      alert("Profile updated successfully!");
+    }
   };
 
   const handlePasswordReset = async () => {
