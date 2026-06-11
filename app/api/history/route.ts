@@ -30,14 +30,14 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error("History fetch error:", error);
-      return NextResponse.json({ error: "Failed to fetch interview history." }, { status: 500 });
+      return NextResponse.json({ error: "Failed to fetch practice history." }, { status: 500 });
     }
 
     return NextResponse.json({ sessions: data ?? [] });
   } catch (error) {
     console.error("History API error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch interview history." },
+      { error: "Failed to fetch practice history." },
       { status: 500 }
     );
   }

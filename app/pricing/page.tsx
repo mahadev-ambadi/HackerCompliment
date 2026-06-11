@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 const plans = [
   {
@@ -154,8 +155,9 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-white py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-[#09090b] text-white py-12 px-4 sm:px-6 lg:px-8 relative">
+      <AnimatedBackground />
+      <div style={{position:'relative',zIndex:10}} className="max-w-7xl mx-auto">
         <div className="mb-8 flex flex-col items-start gap-4">
           <Link href="/" className="flex items-center gap-0.5 text-2xl font-bold tracking-tight" style={{ fontFamily: "'Orbitron', sans-serif" }}>
               <img src="/logo-colored.png" alt="Logo" className="h-7 w-auto sm:h-8 -mr-1" />

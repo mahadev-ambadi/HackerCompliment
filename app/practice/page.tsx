@@ -10,39 +10,78 @@ type Difficulty = "Easy" | "Medium" | "Hard";
 type Language = "Python" | "Java" | "C++";
 
 const MOCK_PROBLEMS = {
-  Easy: {
-    title: "Two Sum",
-    description: "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\n\nYou may assume that each input would have exactly one solution, and you may not use the same element twice.",
-    examples: "Input: nums = [2,7,11,15], target = 9\nOutput: [0,1]",
-    constraints: "- 2 <= nums.length <= 10^4\n- -10^9 <= nums[i] <= 10^9",
-    starterCode: {
-      Python: "def twoSum(nums, target):\n    # Write your code here\n    pass",
-      Java: "class Solution {\n    public int[] twoSum(int[] nums, int target) {\n        // Write your code here\n    }\n}",
-      "C++": "class Solution {\npublic:\n    vector<int> twoSum(vector<int>& nums, int target) {\n        // Write your code here\n    }\n};"
+  Easy: [
+    {
+      title: "Two Sum",
+      description: "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\n\nYou may assume that each input would have exactly one solution, and you may not use the same element twice.",
+      examples: "Input: nums = [2,7,11,15], target = 9\nOutput: [0,1]",
+      constraints: "- 2 <= nums.length <= 10^4\n- -10^9 <= nums[i] <= 10^9",
+      starterCode: {
+        Python: "def twoSum(nums, target):\n    # Write your code here\n    pass",
+        Java: "class Solution {\n    public int[] twoSum(int[] nums, int target) {\n        // Write your code here\n    }\n}",
+        "C++": "class Solution {\npublic:\n    vector<int> twoSum(vector<int>& nums, int target) {\n        // Write your code here\n    }\n};"
+      }
+    },
+    {
+      title: "Valid Parentheses",
+      description: "Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.",
+      examples: "Input: s = \"()\"\nOutput: true\n\nInput: s = \"()[]{}\"\nOutput: true",
+      constraints: "- 1 <= s.length <= 10^4\n- s consists of parentheses only '()[]{}'.",
+      starterCode: {
+        Python: "def isValid(s):\n    # Write your code here\n    pass",
+        Java: "class Solution {\n    public boolean isValid(String s) {\n        // Write your code here\n    }\n}",
+        "C++": "class Solution {\npublic:\n    bool isValid(string s) {\n        // Write your code here\n    }\n};"
+      }
     }
-  },
-  Medium: {
-    title: "LRU Cache",
-    description: "Design a data structure that follows the constraints of a Least Recently Used (LRU) cache.\n\nImplement the LRUCache class:\n- LRUCache(int capacity) Initialize the LRU cache with positive size capacity.\n- int get(int key) Return the value of the key if the key exists, otherwise return -1.\n- void put(int key, int value) Update the value of the key if the key exists. Otherwise, add the key-value pair to the cache. If the number of keys exceeds the capacity from this operation, evict the least recently used key.",
-    examples: "Input\n[\"LRUCache\", \"put\", \"put\", \"get\", \"put\", \"get\", \"put\", \"get\", \"get\", \"get\"]\n[[2], [1, 1], [2, 2], [1], [3, 3], [2], [4, 4], [1], [3], [4]]\nOutput\n[null, null, null, 1, null, -1, null, -1, 3, 4]",
-    constraints: "- 1 <= capacity <= 3000\n- 0 <= key <= 10^4\n- 0 <= value <= 10^5",
-    starterCode: {
-      Python: "class LRUCache:\n    def __init__(self, capacity: int):\n        pass\n\n    def get(self, key: int) -> int:\n        pass\n\n    def put(self, key: int, value: int) -> None:\n        pass",
-      Java: "class LRUCache {\n    public LRUCache(int capacity) {\n        \n    }\n    \n    public int get(int key) {\n        \n    }\n    \n    public void put(int key, int value) {\n        \n    }\n}",
-      "C++": "class LRUCache {\npublic:\n    LRUCache(int capacity) {\n        \n    }\n    \n    int get(int key) {\n        \n    }\n    \n    void put(int key, int value) {\n        \n    }\n};"
+  ],
+  Medium: [
+    {
+      title: "LRU Cache",
+      description: "Design a data structure that follows the constraints of a Least Recently Used (LRU) cache.\n\nImplement the LRUCache class:\n- LRUCache(int capacity) Initialize the LRU cache with positive size capacity.\n- int get(int key) Return the value of the key if the key exists, otherwise return -1.\n- void put(int key, int value) Update the value of the key if the key exists. Otherwise, add the key-value pair to the cache. If the number of keys exceeds the capacity from this operation, evict the least recently used key.",
+      examples: "Input\n[\"LRUCache\", \"put\", \"put\", \"get\", \"put\", \"get\", \"put\", \"get\", \"get\", \"get\"]\n[[2], [1, 1], [2, 2], [1], [3, 3], [2], [4, 4], [1], [3], [4]]\nOutput\n[null, null, null, 1, null, -1, null, -1, 3, 4]",
+      constraints: "- 1 <= capacity <= 3000\n- 0 <= key <= 10^4\n- 0 <= value <= 10^5",
+      starterCode: {
+        Python: "class LRUCache:\n    def __init__(self, capacity: int):\n        pass\n\n    def get(self, key: int) -> int:\n        pass\n\n    def put(self, key: int, value: int) -> None:\n        pass",
+        Java: "class LRUCache {\n    public LRUCache(int capacity) {\n        \n    }\n    \n    public int get(int key) {\n        \n    }\n    \n    public void put(int key, int value) {\n        \n    }\n}",
+        "C++": "class LRUCache {\npublic:\n    LRUCache(int capacity) {\n        \n    }\n    \n    int get(int key) {\n        \n    }\n    \n    void put(int key, int value) {\n        \n    }\n};"
+      }
+    },
+    {
+      title: "Longest Substring Without Repeating Characters",
+      description: "Given a string s, find the length of the longest substring without repeating characters.",
+      examples: "Input: s = \"abcabcbb\"\nOutput: 3\nExplanation: The answer is \"abc\", with the length of 3.",
+      constraints: "- 0 <= s.length <= 5 * 10^4\n- s consists of English letters, digits, symbols and spaces.",
+      starterCode: {
+        Python: "def lengthOfLongestSubstring(s):\n    # Write your code here\n    pass",
+        Java: "class Solution {\n    public int lengthOfLongestSubstring(String s) {\n        // Write your code here\n    }\n}",
+        "C++": "class Solution {\npublic:\n    int lengthOfLongestSubstring(string s) {\n        // Write your code here\n    }\n};"
+      }
     }
-  },
-  Hard: {
-    title: "Median of Two Sorted Arrays",
-    description: "Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays.\n\nThe overall run time complexity should be O(log (m+n)).",
-    examples: "Input: nums1 = [1,3], nums2 = [2]\nOutput: 2.00000\nExplanation: merged array = [1,2,3] and median is 2.",
-    constraints: "- nums1.length == m\n- nums2.length == n\n- 0 <= m <= 1000\n- 0 <= n <= 1000\n- 1 <= m + n <= 2000",
-    starterCode: {
-      Python: "def findMedianSortedArrays(nums1, nums2):\n    # Write your code here\n    pass",
-      Java: "class Solution {\n    public double findMedianSortedArrays(int[] nums1, int[] nums2) {\n        // Write your code here\n    }\n}",
-      "C++": "class Solution {\npublic:\n    double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {\n        // Write your code here\n    }\n};"
+  ],
+  Hard: [
+    {
+      title: "Median of Two Sorted Arrays",
+      description: "Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays.\n\nThe overall run time complexity should be O(log (m+n)).",
+      examples: "Input: nums1 = [1,3], nums2 = [2]\nOutput: 2.00000\nExplanation: merged array = [1,2,3] and median is 2.",
+      constraints: "- nums1.length == m\n- nums2.length == n\n- 0 <= m <= 1000\n- 0 <= n <= 1000\n- 1 <= m + n <= 2000",
+      starterCode: {
+        Python: "def findMedianSortedArrays(nums1, nums2):\n    # Write your code here\n    pass",
+        Java: "class Solution {\n    public double findMedianSortedArrays(int[] nums1, int[] nums2) {\n        // Write your code here\n    }\n}",
+        "C++": "class Solution {\npublic:\n    double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {\n        // Write your code here\n    }\n};"
+      }
+    },
+    {
+      title: "Merge k Sorted Lists",
+      description: "You are given an array of k linked-lists lists, each linked-list is sorted in ascending order.\n\nMerge all the linked-lists into one sorted linked-list and return it.",
+      examples: "Input: lists = [[1,4,5],[1,3,4],[2,6]]\nOutput: [1,1,2,3,4,4,5,6]",
+      constraints: "- k == lists.length\n- 0 <= k <= 10^4",
+      starterCode: {
+        Python: "def mergeKLists(lists):\n    # Write your code here\n    pass",
+        Java: "class Solution {\n    public ListNode mergeKLists(ListNode[] lists) {\n        // Write your code here\n    }\n}",
+        "C++": "class Solution {\npublic:\n    ListNode* mergeKLists(vector<ListNode*>& lists) {\n        // Write your code here\n    }\n};"
+      }
     }
-  }
+  ]
 };
 
 const TOP_COMPANIES = [
@@ -63,6 +102,12 @@ export default function PracticePage() {
   const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
   const [difficulty, setDifficulty] = useState<Difficulty>("Medium");
   const [language, setLanguage] = useState<Language>("Python");
+  const [problemIndex, setProblemIndex] = useState(0);
+
+  // Randomize problem when difficulty changes
+  useEffect(() => {
+    setProblemIndex(Math.floor(Math.random() * MOCK_PROBLEMS[difficulty].length));
+  }, [difficulty]);
   
   // Ref for clicking outside the custom dropdown
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -125,12 +170,12 @@ export default function PracticePage() {
     });
   }, []);
 
-  // Sync starter code when language/difficulty changes
+  // Sync starter code when language/difficulty/problem changes
   useEffect(() => {
     if (step === "setup") {
-      setCode(MOCK_PROBLEMS[difficulty].starterCode[language]);
+      setCode(MOCK_PROBLEMS[difficulty][problemIndex].starterCode[language]);
     }
-  }, [difficulty, language, step]);
+  }, [difficulty, language, step, problemIndex]);
 
   useEffect(() => {
     if (step !== "coding" || isSubmitting) return;
@@ -189,7 +234,7 @@ export default function PracticePage() {
         body: JSON.stringify({
           code,
           language,
-          problemId: MOCK_PROBLEMS[difficulty].title
+          problemId: MOCK_PROBLEMS[difficulty][problemIndex].title
         })
       });
       const data = await res.json();
@@ -212,7 +257,7 @@ export default function PracticePage() {
           code,
           language,
           problem: {
-            title: MOCK_PROBLEMS[difficulty].title,
+            title: MOCK_PROBLEMS[difficulty][problemIndex].title,
             difficulty,
             company
           },
@@ -243,7 +288,7 @@ export default function PracticePage() {
         const { error } = await supabase.from("submissions").insert({
           user_id: userId,
           company,
-          problem_title: MOCK_PROBLEMS[difficulty].title,
+          problem_title: MOCK_PROBLEMS[difficulty][problemIndex].title,
           language,
           code,
           score: evalData.score || 0
@@ -478,21 +523,21 @@ export default function PracticePage() {
                   {difficulty}
                 </span>
               </div>
-              <h1 className="text-2xl font-bold text-white mb-6">{MOCK_PROBLEMS[difficulty].title}</h1>
+              <h1 className="text-2xl font-bold text-white mb-6">{MOCK_PROBLEMS[difficulty][problemIndex].title}</h1>
               
               <div className="prose prose-invert max-w-none">
                 <div className="text-zinc-300 whitespace-pre-wrap leading-relaxed text-sm">
-                  {MOCK_PROBLEMS[difficulty].description}
+                  {MOCK_PROBLEMS[difficulty][problemIndex].description}
                 </div>
                 
                 <h3 className="text-white mt-8 mb-4 font-semibold">Examples</h3>
                 <pre className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-sm text-zinc-300 whitespace-pre-wrap">
-                  {MOCK_PROBLEMS[difficulty].examples}
+                  {MOCK_PROBLEMS[difficulty][problemIndex].examples}
                 </pre>
                 
                 <h3 className="text-white mt-8 mb-4 font-semibold">Constraints</h3>
                 <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-sm text-zinc-300 whitespace-pre-wrap font-mono">
-                  {MOCK_PROBLEMS[difficulty].constraints}
+                  {MOCK_PROBLEMS[difficulty][problemIndex].constraints}
                 </div>
               </div>
             </div>
@@ -535,7 +580,7 @@ export default function PracticePage() {
           <div className="mx-auto max-w-4xl px-6 py-12 overflow-y-auto h-full">
             <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
               <h1 className="text-4xl font-black text-white">Evaluation Complete</h1>
-              <p className="mt-2 text-zinc-400">Here's how you did on {MOCK_PROBLEMS[difficulty].title}</p>
+              <p className="mt-2 text-zinc-400">Here's how you did on {MOCK_PROBLEMS[difficulty][problemIndex].title}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

@@ -146,7 +146,7 @@ export default async function DashboardPage() {
         {recentSessions && recentSessions.length > 0 && (
           <div className="mb-8 rounded-2xl border border-zinc-700 bg-black/60 p-6 shadow-2xl backdrop-blur-lg">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-white">Recent Interviews</h2>
+              <h2 className="text-lg font-semibold text-white">Recent Practices</h2>
               <Link
                 href="/history"
                 className="text-sm font-medium text-[#FF6B2B] hover:text-[#FF6B2B]"

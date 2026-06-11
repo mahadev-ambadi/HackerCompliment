@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 export type InterviewSession = {
   id: string;
@@ -72,7 +73,7 @@ export default function HistoryPage() {
         } = await supabase.auth.getUser();
 
         if (!user) {
-          setError("Please log in to view your interview history.");
+          setError("Please log in to view your practice history.");
           setLoading(false);
           return;
         }
@@ -165,7 +166,9 @@ export default function HistoryPage() {
   }, [sessions]);
 
   return (
-    <div className="min-h-full bg-[#09090b]">
+    <div className="min-h-full bg-[#09090b] relative">
+      <AnimatedBackground />
+      <div style={{position:'relative',zIndex:10}} className="flex flex-col flex-1 w-full">
       <header className="border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-md sticky top-0 z-10">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <div className="flex items-center gap-4">
@@ -177,7 +180,7 @@ export default function HistoryPage() {
               </div>
             </Link>
             <span className="hidden sm:inline-block rounded-full bg-zinc-800 px-3 py-1 text-xs font-semibold text-zinc-300">
-              Interview History
+              Practice History
             </span>
           </div>
         </div>
@@ -196,7 +199,7 @@ export default function HistoryPage() {
         {loading && (
           <div className="flex flex-col items-center justify-center py-24">
             <span className="h-10 w-10 animate-spin rounded-full border-2 border-[#FF6B2B]/30 border-t-[#FF6B2B]" />
-            <p className="mt-4 text-sm text-zinc-400">Loading your interview history...</p>
+            <p className="mt-4 text-sm text-zinc-400">Loading your practice history...</p>
           </div>
         )}
 
@@ -212,7 +215,7 @@ export default function HistoryPage() {
         {!loading && !error && sessions.length === 0 && (
           <div className="flex flex-col items-center rounded-2xl border border-zinc-800 bg-zinc-900/40 px-6 py-16 text-center">
             <span className="text-5xl">📋</span>
-            <h2 className="mt-4 text-xl font-semibold text-white">No interviews yet</h2>
+            <h2 className="mt-4 text-xl font-semibold text-white">No practices yet</h2>
             <p className="mt-2 text-zinc-400">Start your first mock interview</p>
             <Link
               href="/interview"
@@ -227,7 +230,7 @@ export default function HistoryPage() {
           <>
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               {[
-                { label: "Total Interviews", value: stats.total },
+                { label: "Total Practices", value: stats.total },
                 { label: "Average Score", value: stats.average },
                 { label: "Best Score", value: stats.best },
                 { label: "Companies Practiced", value: stats.companies },
@@ -322,7 +325,7 @@ export default function HistoryPage() {
             <div className="mt-6 space-y-4">
               {filteredSessions.length === 0 ? (
                 <p className="text-center text-sm text-zinc-500 py-8">
-                  No interviews match your filters.
+                  No practices match your filters.
                 </p>
               ) : (
                 paginatedSessions.map((session) => {
@@ -467,6 +470,7 @@ export default function HistoryPage() {
         )}
         </div>
       </main>
+      </div>
     </div>
   );
 }

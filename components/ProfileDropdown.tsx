@@ -62,8 +62,7 @@ export default function ProfileDropdown({
           <div className="flex flex-col gap-1">
             <Link onClick={() => setProfileOpen(false)} href="/dashboard" className="rounded-lg px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white">🏠 Dashboard</Link>
             <Link onClick={() => setProfileOpen(false)} href="/profile" className="rounded-lg px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white">👤 My Profile</Link>
-            <Link onClick={() => setProfileOpen(false)} href="/interview" className="rounded-lg px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white">🎯 Start Interview</Link>
-            <Link onClick={() => setProfileOpen(false)} href="/resume" className="rounded-lg px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white">📄 Resume Analyzer</Link>
+
             <Link onClick={() => setProfileOpen(false)} href="/history" className="rounded-lg px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white">📊 History</Link>
             <Link onClick={() => setProfileOpen(false)} href="/pricing" className="rounded-lg px-3 py-2 text-sm text-[#FF6B2B] transition-colors hover:bg-zinc-800">💳 Upgrade Plan</Link>
           </div>

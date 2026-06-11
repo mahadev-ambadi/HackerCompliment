@@ -74,32 +74,38 @@ export async function GET(req: Request) {
       });
     }
     
-    // Fetch Sessions
+    // Fetch Sessions for Companies
     const { data: allSessions } = await supabaseAdmin.from('interview_sessions').select('company, created_at');
     let totalSessions = 0;
     let sessionsThisWeek = 0;
     const companyCounts: Record<string, number> = {};
     
     if (allSessions) {
-      totalSessions = allSessions.length;
       allSessions.forEach(s => {
-        if (s.created_at) {
-          const cTime = new Date(s.created_at).getTime();
-          if (cTime >= monday.getTime()) sessionsThisWeek++;
-        }
         const c = s.company || 'Unknown';
         companyCounts[c] = (companyCounts[c] || 0) + 1;
       });
     }
+
+    // Accurately get total sessions from session_usage table
+    const { data: sessionUsage } = await supabaseAdmin.from('session_usage').select('sessions_used, week_start');
+    if (sessionUsage) {
+      sessionUsage.forEach(usage => {
+        totalSessions += usage.sessions_used || 0;
+        const uTime = new Date(usage.week_start).getTime();
+        if (uTime >= monday.getTime()) {
+          sessionsThisWeek += usage.sessions_used || 0;
+        }
+      });
+    }
+
     const topCompanies = Object.entries(companyCounts)
       .map(([company, count]) => ({ company, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
       
-    // Fetch Submissions
-    const { count: totalSubmissions } = await supabaseAdmin
-      .from('submissions')
-      .select('*', { count: 'exact', head: true });
+    // Code Submissions are the same as Total Sessions in this context
+    const totalSubmissions = totalSessions;
       
     // Fetch Purchases
     const { data: purchasesData } = await supabaseAdmin

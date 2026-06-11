@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -160,8 +161,9 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 px-4 py-12 md:px-8">
-      <div className="mx-auto max-w-5xl space-y-8">
+    <div className="min-h-screen bg-[#09090b] px-4 py-12 md:px-8 relative">
+      <AnimatedBackground />
+      <div style={{position:'relative',zIndex:10}} className="mx-auto max-w-5xl space-y-8">
         <div className="mb-4">
           <Link href="/" className="flex items-center gap-0.5 text-xl font-bold tracking-tight mb-2" style={{ fontFamily: "'Orbitron', sans-serif" }}>
               <img src="/logo-colored.png" alt="Logo" className="h-7 w-auto sm:h-8 -mr-1" />
@@ -212,7 +214,7 @@ export default function ProfilePage() {
         {/* 2. STATS ROW */}
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 text-center">
-            <p className="text-sm font-medium text-zinc-400">Total Interviews</p>
+            <p className="text-sm font-medium text-zinc-400">Total Practices</p>
             <p className="mt-2 text-3xl font-bold text-white">{stats.totalInterviews}</p>
           </div>
           <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 text-center">
@@ -248,7 +250,7 @@ export default function ProfilePage() {
             }`}>
               <span className="text-3xl mb-2">💪</span>
               <p className="text-sm font-bold text-white">Practice Pro</p>
-              {stats.totalInterviews < 5 && <span className="mt-2 text-xs text-zinc-500">🔒 5 interviews</span>}
+              {stats.totalInterviews < 5 && <span className="mt-2 text-xs text-zinc-500">🔒 5 practices</span>}
             </div>
             
             {/* High Scorer */}
@@ -278,7 +280,7 @@ export default function ProfilePage() {
           {/* 4. RECENT INTERVIEWS */}
           <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8">
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">Recent Interviews</h2>
+              <h2 className="text-xl font-bold text-white">Recent Practices</h2>
               <Link href="/history" className="text-sm font-medium text-[#FF6B2B] hover:underline">
                 View All →
               </Link>
@@ -303,7 +305,7 @@ export default function ProfilePage() {
                 ))}
               </div>
             ) : (
-              <p className="py-8 text-center text-sm text-zinc-500">No interviews completed yet.</p>
+              <p className="py-8 text-center text-sm text-zinc-500">No practices completed yet.</p>
             )}
           </div>
 
