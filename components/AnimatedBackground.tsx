@@ -13,6 +13,7 @@ export default function AnimatedBackground() {
     const mouse = { x: 0, y: 0 };
 
     function resize() {
+      if (!canvas) return;
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     }
