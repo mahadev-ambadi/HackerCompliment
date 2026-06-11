@@ -43,3 +43,40 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/sv
 .nl{position:relative}
 .nl::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:1.5px;background:var(--accent);transition:width .22s}
 .nl:hover::after{width:100%}
+
+/* Aurora Background */
+.bg-aurora {
+  background: linear-gradient(-45deg, #1a0533, #0a0f2e, #0d2137);
+  background-size: 400% 400%;
+  animation: aurora-gradient 15s ease infinite;
+}
+@keyframes aurora-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Floating Animations */
+@keyframes float-up-down { 0%,100% { transform: translateY(0px) } 50% { transform: translateY(-30px) } }
+@keyframes float-diagonal { 0%,100% { transform: translate(0,0) } 50% { transform: translate(20px,-25px) } }
+@keyframes float-left-right { 0%,100% { transform: translateX(0) } 50% { transform: translateX(30px) } }
+@keyframes float-circle { 0% { transform: rotate(0deg) translateX(20px) } 100% { transform: rotate(360deg) translateX(20px) } }
+@keyframes pulse-glow { 0%,100% { opacity: 0.15; transform: scale(1) } 50% { opacity: 0.25; transform: scale(1.1) } }
+@keyframes twinkle { 0%,100% { opacity: 0 } 50% { opacity: 0.6 } }
+@keyframes drift { 0% { background-position: 0 0 } 100% { background-position: 50px 50px } }
+
+/* Utility classes */
+.animate-float-up-down { animation: float-up-down 12s ease-in-out infinite alternate; }
+.animate-float-diagonal { animation: float-diagonal 14s ease-in-out infinite alternate; }
+.animate-float-left-right { animation: float-left-right 10s ease-in-out infinite alternate; }
+.animate-float-circle { animation: float-circle 15s linear infinite; }
+.animate-pulse-glow { animation: pulse-glow 8s ease-in-out infinite; }
+.animate-twinkle { animation: twinkle 4s ease-in-out infinite; }
+
+/* Subtle drifting mesh pattern */
+.bg-mesh-pattern {
+  background-size: 50px 50px;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.4) 1px, transparent 1px);
+  animation: drift 20s linear infinite;
+  opacity: 0.08; /* User asked for 0.03 but we'll balance it in JSX or here */
+}

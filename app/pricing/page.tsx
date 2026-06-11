@@ -10,28 +10,28 @@ const plans = [
     name: "Basic",
     price: "Rs.99",
     planId: "basic",
-    features: ["3 extra sessions", "One-time purchase", "Never expires"],
+    features: ["3 extra sessions", "3 extra resume fixes", "Never expires"],
     isPopular: false,
   },
   {
     name: "Standard",
     price: "Rs.199",
     planId: "standard",
-    features: ["8 extra sessions", "One-time purchase", "Never expires"],
+    features: ["8 extra sessions", "6 extra resume fixes", "Never expires"],
     isPopular: false,
   },
   {
     name: "Interview Boost",
     price: "Rs.299",
     planId: "boost",
-    features: ["7-day unlimited access", "All interview types", "Priority AI"],
+    features: ["7-day unlimited access [sessions and resume fixes]", "No restrictions", "Never Expires"],
     isPopular: true,
   },
   {
     name: "Pro Plan",
     price: "Rs.599/month",
     planId: "pro",
-    features: ["Unlimited everything", "All features", "Priority support"],
+    features: ["Unlimited access for 30 days [Sessions and resume fixes]", "No restrictions", "Never Expires"],
     isPopular: false,
   },
 ];
@@ -157,10 +157,13 @@ export default function PricingPage() {
     <div className="min-h-screen bg-[#09090b] text-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8 flex flex-col items-start gap-4">
-          <Link href="/" className="text-2xl font-bold tracking-tight inline-block">
-            <span className="text-[#FF6B2B]">Hacker</span>
-            <span className="text-white">Compliment</span>
-          </Link>
+          <Link href="/" className="flex items-center gap-0.5 text-2xl font-bold tracking-tight" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              <img src="/logo-colored.png" alt="Logo" className="h-7 w-auto sm:h-8 -mr-1" />
+              <div className="flex">
+                <span className="text-white">Hacker</span>
+                <span className="text-[#FF6B2B]">Compliment</span>
+              </div>
+            </Link>
           <Link
             href="/dashboard"
             className="inline-block rounded-xl bg-[#FF6B2B] px-5 py-2 text-sm font-bold text-black transition-all hover:scale-[1.02] hover:brightness-110"

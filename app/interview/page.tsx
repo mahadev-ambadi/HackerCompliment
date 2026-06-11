@@ -16,14 +16,16 @@ const companies = [
   "Policybazaar", "Lenskart", "Dunzo", "Urban Company", "BigBasket", "Udaan",
   "Groww", "Zerodha", "Upstox", "Slice", "BrowserStack", "Postman", "Chargebee",
   "Hasura", "Clevertap", "MoEngage", "Mixpanel India", "Druva", "Innovaccer",
-  "Google", "Amazon", "Microsoft", "Meta", "Apple", "Netflix", "Uber",
+  "Google", "Amazon", "AWS", "Microsoft", "Meta", "Apple", "Netflix", "Uber",
   "Airbnb", "LinkedIn", "Twitter", "Salesforce", "Adobe", "Oracle", "IBM", "SAP",
   "Cisco", "Intel", "Qualcomm", "Texas Instruments", "Nvidia", "Atlassian",
   "Stripe", "Square", "Shopify", "Spotify", "Snap", "Pinterest", "Reddit",
   "Dropbox", "Box", "Slack", "Zoom", "HubSpot", "Workday", "ServiceNow",
   "Goldman Sachs", "JPMorgan", "Morgan Stanley", "Deutsche Bank",
   "Barclays", "HSBC", "Citi", "McKinsey", "BCG", "Bain", "Deloitte", "Accenture",
-  "EY", "PwC", "KPMG", "Capgemini", "Wipro Consulting"
+  "EY", "PwC", "KPMG", "Capgemini", "Wipro Consulting", "GlobalLogic",
+  "Anthropic", "Canva", "Cloudflare", "Datadog", "DeepSeek", "Discord", "Figma", 
+  "GitHub", "Hugging Face", "Intuitive", "PayPal", "Trimble"
 ];
 
 const roles = [
@@ -695,15 +697,18 @@ export default function InterviewPage() {
 
   return (
     <div 
-      className="h-screen overflow-hidden font-sans text-white flex flex-col bg-cover bg-center bg-no-repeat bg-fixed"
+      className="min-h-screen font-sans text-white flex flex-col bg-cover bg-center bg-no-repeat bg-fixed"
       style={{ backgroundImage: "url('/bg4.jpg')" }}
     >
       <header className="border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-lg font-bold tracking-tight">
-              <span className="text-[#FF6B2B]">Hacker</span>
-              <span className="text-white">Compliment</span>
+            <Link href="/dashboard" className="flex items-center gap-0.5 text-lg font-bold tracking-tight" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              <img src="/logo-colored.png" alt="Logo" className="h-7 w-auto sm:h-8 -mr-1" />
+              <div className="flex">
+                <span className="text-white">Hacker</span>
+                <span className="text-[#FF6B2B]">Compliment</span>
+              </div>
             </Link>
             {step !== "setup" && (
               <span className="text-xs text-zinc-500 sm:text-sm">AI Interview Simulator</span>
@@ -725,7 +730,7 @@ export default function InterviewPage() {
           <div className="mx-auto max-w-xl transition-opacity duration-300">
             <div className="rounded-2xl border border-zinc-700 bg-black/70 p-4 shadow-2xl backdrop-blur-lg sm:p-5">
               <h1 className="text-2xl font-bold text-white sm:text-3xl drop-shadow-md">
-                Configure Technical Round
+                <span className="text-[#FF6B2B]">Technical</span> Round
               </h1>
               <p className="mt-1 text-sm text-zinc-300 drop-shadow-sm">
                 Set up your technical round — 20 questions with real AI evaluation.
@@ -892,7 +897,7 @@ export default function InterviewPage() {
 
         {step === "interview" && (
           <div className="transition-opacity duration-300">
-            <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+            <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
               <div>
                 <p className="text-sm text-zinc-500">Interviewing for</p>
                 <p className="font-semibold text-white">
@@ -944,7 +949,7 @@ export default function InterviewPage() {
             )}
 
             <div className="grid gap-6 lg:grid-cols-2">
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+              <div className="rounded-2xl border border-zinc-700 bg-black/60 shadow-2xl backdrop-blur-lg p-6">
                 <div className="mb-4 flex items-center gap-3">
                   <span className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-800 text-2xl">
                     🤖
@@ -964,7 +969,7 @@ export default function InterviewPage() {
                     </div>
                   </div>
                 </div>
-                <div className="rounded-xl border border-zinc-700/80 bg-zinc-800/40 p-5">
+                <div className="rounded-xl border border-zinc-600 bg-black/40 backdrop-blur-md p-5">
                   <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                     Current question
                   </p>
@@ -979,7 +984,7 @@ export default function InterviewPage() {
                 )}
               </div>
 
-              <div className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+              <div className="flex flex-col rounded-2xl border border-zinc-700 bg-black/60 shadow-2xl backdrop-blur-lg p-6">
                 <label htmlFor="answer" className="mb-2 text-sm font-medium text-zinc-300">
                   Your response
                 </label>
@@ -1040,37 +1045,41 @@ export default function InterviewPage() {
           <div className="mx-auto max-w-3xl transition-opacity duration-300">
             <div className="text-center">
               <h1 className="text-3xl font-bold text-white sm:text-4xl">
-                Interview Complete! 🎉
+                Test Complete! 🎉
               </h1>
-              <p className="mt-2 text-zinc-400">
-                {company} · {role} · {interviewType}
-              </p>
-              <p className="mt-1 text-sm text-zinc-500">
-                Based on {evaluations.length} AI-evaluated answer
-                {evaluations.length !== 1 ? "s" : ""}
-              </p>
-
-              <div
-                className={`mt-6 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold ${results.wouldRecommend
-                    ? "border-[#FF6B2B]/30 bg-[#FF6B2B]/10 text-[#FF6B2B]"
-                    : "border-red-500/30 bg-red-500/10 text-red-400"
-                  }`}
-              >
-                Would Recommend: {results.wouldRecommend ? "Yes" : "No"}
+              <div className="mt-4 flex flex-col items-center justify-center rounded-xl border border-zinc-700/50 bg-black/60 px-6 py-3 shadow-xl backdrop-blur-md mx-auto w-fit">
+                <p className="text-sm font-medium text-zinc-300 drop-shadow-sm">
+                  {company} · {role} · {interviewType}
+                </p>
+                <p className="mt-1 text-xs text-zinc-400 drop-shadow-sm">
+                  Based on {evaluations.length} AI-evaluated answer
+                  {evaluations.length !== 1 ? "s" : ""}
+                </p>
               </div>
 
-              <div
-                className={`mt-6 inline-flex flex-col items-center rounded-2xl border px-12 py-6 ${getScoreBorder(results.overall)}`}
-              >
-                <span className="text-sm font-medium text-zinc-400">Overall Score</span>
-                <span className={`mt-1 text-5xl font-bold sm:text-6xl ${getScoreColor(results.overall)}`}>
-                  {results.overall}
-                  <span className="text-2xl text-zinc-500">/100</span>
-                </span>
+              <div className="mt-6 flex flex-row flex-wrap items-center justify-center gap-8">
+                <div
+                  className={`inline-flex items-center gap-2 rounded-full border bg-black/80 shadow-xl backdrop-blur-md px-6 py-3 text-sm font-bold ${results.wouldRecommend
+                      ? "border-[#FF6B2B]/50 text-[#FF6B2B]"
+                      : "border-red-500/50 text-red-400"
+                    }`}
+                >
+                  Would Recommend: {results.wouldRecommend ? "Yes" : "No"}
+                </div>
+
+                <div
+                  className={`inline-flex flex-col items-center justify-center rounded-2xl border bg-black/80 shadow-xl backdrop-blur-md px-12 py-6 ${getScoreBorder(results.overall)}`}
+                >
+                  <span className="text-sm font-medium text-zinc-400">Overall Score</span>
+                  <span className={`mt-1 text-5xl font-bold sm:text-6xl ${getScoreColor(results.overall)}`}>
+                    {results.overall}
+                    <span className="text-2xl text-zinc-500">/100</span>
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div className="mt-8 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+            <div className="mt-8 rounded-2xl border border-zinc-700 bg-black/60 shadow-2xl backdrop-blur-lg p-6">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
                 AI Feedback
               </h2>
@@ -1086,7 +1095,7 @@ export default function InterviewPage() {
               ].map((card) => (
                 <div
                   key={card.label}
-                  className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5"
+                  className="rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-5 transition-transform hover:-translate-y-1"
                 >
                   <p className="text-sm text-zinc-400">{card.label}</p>
                   <p className={`mt-2 text-2xl font-bold ${getScoreColor(card.value)}`}>
@@ -1098,7 +1107,7 @@ export default function InterviewPage() {
             </div>
 
             <div className="mt-8 grid gap-6 sm:grid-cols-2">
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+              <div className="rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-6">
                 <h2 className="font-semibold text-[#FF6B2B]">Strengths</h2>
                 <ul className="mt-4 space-y-2">
                   {results.strengths.map((item) => (
@@ -1109,7 +1118,7 @@ export default function InterviewPage() {
                   ))}
                 </ul>
               </div>
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+              <div className="rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-6">
                 <h2 className="font-semibold text-amber-400">Areas to Improve</h2>
                 <ul className="mt-4 space-y-2">
                   {results.improvements.map((item) => (
@@ -1132,7 +1141,7 @@ export default function InterviewPage() {
               </button>
               <Link
                 href="/dashboard"
-                className="rounded-xl border border-zinc-700 px-8 py-3 text-center text-sm font-semibold text-white transition-colors hover:border-[#FF6B2B]/50 hover:bg-zinc-800 sm:min-w-[200px]"
+                className="rounded-xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md px-8 py-3 text-center text-sm font-semibold text-white transition-all hover:border-[#FF6B2B]/50 hover:bg-black/80 sm:min-w-[200px]"
               >
                 Go to Dashboard
               </Link>

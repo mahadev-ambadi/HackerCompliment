@@ -78,8 +78,35 @@ export default function PracticePage() {
   }, []);
   
   // Gating State
-  const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [sessionInfo, setSessionInfo] = useState<any>(null);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
   const [shouldBlock, setShouldBlock] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+    async function checkLimit() {
+      try {
+        const headers = await getSessionAuthHeaders();
+        const res = await fetch(`/api/session-limit?userId=${userId}`, {
+          credentials: "include",
+          headers,
+          cache: "no-store",
+        });
+        const data = await res.json();
+        setSessionInfo(data);
+        if (!data.canStart) {
+          setShouldBlock(true);
+        } else {
+          setShouldBlock(false);
+        }
+      } catch (err) {
+        console.error("Failed to fetch session usage:", err);
+      } finally {
+        setSessionsLoading(false);
+      }
+    }
+    checkLimit();
+  }, [userId]);
 
   // Editor State
   const [code, setCode] = useState("");
@@ -127,7 +154,7 @@ export default function PracticePage() {
     setSessionsLoading(true);
     try {
       const headers = await getSessionAuthHeaders();
-      const res = await fetch(`/api/coding-session-limit?userId=${userId}`, {
+      const res = await fetch(`/api/session-limit?userId=${userId}`, {
         credentials: "include",
         headers,
         cache: "no-store"
@@ -205,7 +232,7 @@ export default function PracticePage() {
       // 2. Increment Session
       if (userId) {
         const headers = await getSessionAuthHeaders();
-        await fetch("/api/coding-session-limit", {
+        await fetch("/api/session-limit", {
           method: "POST",
           headers: { ...headers, "Content-Type": "application/json" },
           body: JSON.stringify({ userId })
@@ -258,9 +285,12 @@ export default function PracticePage() {
       <header className="border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-md sticky top-0 z-10">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-xl font-bold tracking-tight inline-block hover:opacity-80 transition-opacity">
-              <span className="text-[#FF6B2B]">Hacker</span>
-              <span className="text-white">Compliment</span>
+            <Link href="/dashboard" className="flex items-center gap-0.5 text-xl font-bold tracking-tight hover:opacity-80 transition-opacity" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              <img src="/logo-colored.png" alt="Logo" className="h-7 w-auto sm:h-8 -mr-1" />
+              <div className="flex">
+                <span className="text-white">Hacker</span>
+                <span className="text-[#FF6B2B]">Compliment</span>
+              </div>
             </Link>
             <span className="hidden sm:inline-block rounded-full bg-zinc-800 px-3 py-1 text-xs font-semibold text-zinc-300">
               Coding Practice
@@ -296,7 +326,7 @@ export default function PracticePage() {
         </div>
       </header>
 
-      <main className="h-[calc(100vh-4rem)]">
+      <main className={`h-[calc(100vh-4rem)] ${step !== "coding" ? "overflow-y-auto" : ""}`}>
         {step !== "coding" && (
           <div className="mx-auto max-w-6xl px-6 pt-4 pb-2">
             <Link
@@ -309,41 +339,66 @@ export default function PracticePage() {
         )}
         {step === "setup" && (
           <div className="mx-auto max-w-2xl px-6 pt-2 pb-8">
-            <div className="mb-6 inline-block bg-black/60 backdrop-blur-md px-6 py-3 rounded-2xl border border-zinc-800/50">
-              <h1 className="text-3xl font-bold text-white drop-shadow-md">Setup Practice Session</h1>
-              <p className="mt-1 text-sm text-zinc-300 drop-shadow-sm">Choose a company, difficulty, and your preferred language.</p>
+            <div className="text-center mb-6">
+              <div className="inline-block bg-black/60 backdrop-blur-md px-6 py-4 rounded-2xl border border-zinc-800/50">
+                <h1 className="text-3xl font-bold text-white drop-shadow-md mb-1"><span className="text-[#FF6B2B]">Coding</span> Round</h1>
+                <p className="text-sm text-zinc-300 drop-shadow-sm mb-3">Choose a company, difficulty, and your preferred language.</p>
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#FF6B2B]/30 bg-[#FF6B2B]/10 px-4 py-1.5 text-sm font-medium text-[#FF6B2B]">
+                  {sessionsLoading ? (
+                    "Loading session usage..."
+                  ) : sessionInfo?.isUnlimitedPlan ? (
+                    <>{sessionInfo.unlimitedLabel || "Unlimited Access"}</>
+                  ) : sessionInfo ? (
+                    <>
+                      {Math.min(sessionInfo.sessions_used, sessionInfo.limit)} of {sessionInfo.limit} {sessionInfo.planName === 'free' ? 'free ' : ''}sessions used{sessionInfo.planName === 'free' ? ' this week' : ''}
+                    </>
+                  ) : null}
+                </span>
+              </div>
             </div>
 
             <div className="space-y-5 rounded-2xl border border-zinc-700 bg-black/70 backdrop-blur-lg p-6 shadow-2xl">
               <div className="space-y-3" ref={dropdownRef}>
                 <label className="text-sm font-semibold text-zinc-100">Target Company</label>
                 <div className="relative">
-                  <button
-                    onClick={() => setIsCompanyDropdownOpen(!isCompanyDropdownOpen)}
-                    className="flex w-full items-center justify-between rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-left text-white focus:border-[#FF6B2B] focus:outline-none"
-                  >
-                    <span>{company}</span>
-                    <svg className={`h-5 w-5 text-zinc-400 transition-transform ${isCompanyDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={company}
+                      onChange={(e) => {
+                        setCompany(e.target.value);
+                        setIsCompanyDropdownOpen(true);
+                      }}
+                      onFocus={() => setIsCompanyDropdownOpen(true)}
+                      placeholder="Type a company..."
+                      className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-left text-white focus:border-[#FF6B2B] focus:outline-none placeholder-zinc-500"
+                    />
+                    <svg className={`absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400 pointer-events-none transition-transform ${isCompanyDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
-                  </button>
+                  </div>
                   
                   {isCompanyDropdownOpen && (
                     <div className="absolute top-full left-0 z-50 mt-2 max-h-60 w-full overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-950 py-2 shadow-2xl custom-scrollbar">
-                      {TOP_COMPANIES.map(c => (
-                        <button
-                          key={c}
-                          onClick={() => {
-                            setCompany(c);
-                            setIsCompanyDropdownOpen(false);
-                          }}
-                          className={`w-full px-4 py-2 text-left text-sm transition-colors hover:bg-zinc-800 hover:text-[#FF6B2B] ${
-                            company === c ? "bg-[#FF6B2B]/10 text-[#FF6B2B] font-semibold" : "text-zinc-300"
-                          }`}
-                        >
-                          {c}
-                        </button>
-                      ))}
+                      {TOP_COMPANIES.filter(c => c.toLowerCase().includes(company.toLowerCase())).length > 0 ? (
+                        TOP_COMPANIES.filter(c => c.toLowerCase().includes(company.toLowerCase())).map(c => (
+                          <button
+                            key={c}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setCompany(c);
+                              setIsCompanyDropdownOpen(false);
+                            }}
+                            className={`w-full px-4 py-2 text-left text-sm transition-colors hover:bg-zinc-800 hover:text-[#FF6B2B] ${
+                              company === c ? "bg-[#FF6B2B]/10 text-[#FF6B2B] font-semibold" : "text-zinc-300"
+                            }`}
+                          >
+                            {c}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-4 py-3 text-sm text-zinc-500 text-center italic">Use "{company}" as custom company</div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -388,12 +443,9 @@ export default function PracticePage() {
               </div>
 
               {shouldBlock && (
-                <div className="mt-4 rounded-xl border border-red-500/20 bg-gradient-to-br from-red-500/10 to-orange-500/10 p-5 text-center shadow-lg shadow-red-500/5">
-                  <h3 className="mb-2 font-bold text-white">Weekly Limit Reached</h3>
-                  <p className="text-sm text-zinc-300">You've used all your free coding sessions this week.</p>
-                  <Link href="/pricing" className="mt-4 inline-block rounded-xl bg-white px-6 py-2.5 text-sm font-semibold text-black hover:bg-zinc-200 transition-colors">
-                    View Plans
-                  </Link>
+                <div className="mb-4 text-sm text-red-400 bg-red-500/10 border border-red-500/30 p-4 rounded-xl text-center">
+                  You've used all {sessionInfo?.limit} of your free sessions this week.<br />
+                  <Link href="/pricing" className="text-[#FF6B2B] underline font-bold mt-1 inline-block">Upgrade to Pro</Link> for unlimited practice.
                 </div>
               )}
 
@@ -413,7 +465,7 @@ export default function PracticePage() {
         {step === "coding" && (
           <div className="flex h-full flex-col lg:flex-row">
             {/* Left Pane: Problem Description */}
-            <div className="flex-1 overflow-y-auto border-r border-zinc-800 bg-zinc-950 p-6 lg:max-w-xl xl:max-w-2xl">
+            <div className="flex-1 overflow-y-auto border-r border-zinc-700 bg-black/60 shadow-2xl backdrop-blur-lg p-6 lg:max-w-xl xl:max-w-2xl">
               <div className="flex items-center gap-3 mb-4">
                 <span className="rounded-full bg-zinc-800 px-3 py-1 text-xs font-semibold text-white">
                   {company}
@@ -463,7 +515,7 @@ export default function PracticePage() {
                 />
               </div>
               
-              <div className="h-64 border-t border-zinc-800 bg-zinc-950 flex flex-col">
+              <div className="h-64 border-t border-zinc-700 bg-black/80 backdrop-blur-lg flex flex-col">
                 <div className="px-4 py-2 border-b border-zinc-800 bg-zinc-900/50 flex items-center justify-between">
                   <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Console Output</span>
                 </div>
@@ -488,7 +540,7 @@ export default function PracticePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               {/* Score Card */}
-              <div className="rounded-3xl border border-zinc-800 bg-zinc-900/50 p-8 flex flex-col items-center justify-center relative overflow-hidden">
+              <div className="rounded-3xl border border-zinc-700 bg-black/60 shadow-2xl backdrop-blur-lg p-8 flex flex-col items-center justify-center relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-32 bg-[#FF6B2B]/10 blur-3xl rounded-full" />
                 <span className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4 relative z-10">Overall Score</span>
                 <div className="relative z-10 flex items-baseline gap-1">
@@ -498,7 +550,7 @@ export default function PracticePage() {
               </div>
 
               {/* Badges Card */}
-              <div className="md:col-span-2 rounded-3xl border border-zinc-800 bg-zinc-900/50 p-8 flex flex-col justify-center gap-6">
+              <div className="md:col-span-2 rounded-3xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-8 flex flex-col justify-center gap-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <span className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">Correctness</span>
                   <span className={`px-4 py-1.5 rounded-full text-sm font-bold border ${
@@ -527,7 +579,7 @@ export default function PracticePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {/* Strengths */}
-              <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/5 p-8">
+              <div className="rounded-3xl border border-emerald-500/30 bg-black/60 shadow-xl backdrop-blur-md p-8">
                 <h3 className="text-lg font-bold text-emerald-400 mb-6 flex items-center gap-2">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                   Strengths
@@ -542,7 +594,7 @@ export default function PracticePage() {
               </div>
 
               {/* Improvements */}
-              <div className="rounded-3xl border border-orange-500/20 bg-orange-500/5 p-8">
+              <div className="rounded-3xl border border-orange-500/30 bg-black/60 shadow-xl backdrop-blur-md p-8">
                 <h3 className="text-lg font-bold text-orange-400 mb-6 flex items-center gap-2">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                   Areas to Improve
@@ -558,7 +610,7 @@ export default function PracticePage() {
             </div>
 
             {/* Optimized Approach & Feedback */}
-            <div className="rounded-3xl border border-zinc-800 bg-zinc-900/50 p-8 mb-12">
+            <div className="rounded-3xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-8 mb-12">
               <h3 className="text-lg font-bold text-white mb-4">Optimized Approach</h3>
               <p className="text-sm text-zinc-300 leading-relaxed mb-8">
                 {evaluation.optimized_approach || "No optimized approach provided."}

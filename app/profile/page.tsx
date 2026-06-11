@@ -163,10 +163,13 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-zinc-950 px-4 py-12 md:px-8">
       <div className="mx-auto max-w-5xl space-y-8">
         <div className="mb-4">
-          <Link href="/" className="text-xl font-bold tracking-tight inline-block mb-2">
-            <span className="text-[#FF6B2B]">Hacker</span>
-            <span className="text-white">Compliment</span>
-          </Link>
+          <Link href="/" className="flex items-center gap-0.5 text-xl font-bold tracking-tight mb-2" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              <img src="/logo-colored.png" alt="Logo" className="h-7 w-auto sm:h-8 -mr-1" />
+              <div className="flex">
+                <span className="text-white">Hacker</span>
+                <span className="text-[#FF6B2B]">Compliment</span>
+              </div>
+            </Link>
           <div className="mt-1">
             <Link
               href="/dashboard"

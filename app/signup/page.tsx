@@ -19,10 +19,13 @@ const targetCompanies = [
 
 function Logo() {
   return (
-    <Link href="/" className="text-xl font-bold tracking-tight">
-      <span className="text-[#FF6B2B]">Hacker</span>
-      <span className="text-white">Compliment</span>
-    </Link>
+    <Link href="/" className="flex items-center gap-0.5 text-xl font-bold tracking-tight" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              <img src="/logo-colored.png" alt="Logo" className="h-7 w-auto sm:h-8 -mr-1" />
+              <div className="flex">
+                <span className="text-white">Hacker</span>
+                <span className="text-[#FF6B2B]">Compliment</span>
+              </div>
+            </Link>
   );
 }
 
@@ -143,12 +146,20 @@ export default function SignupPage() {
 
   return (
     <div 
-      className="relative flex h-screen overflow-hidden flex-col items-center justify-center px-4 pt-0 pb-4 bg-cover bg-center bg-no-repeat bg-fixed text-white font-sans selection:bg-[#FF6B2B]/30"
+      className="relative min-h-screen overflow-hidden flex flex-col items-center justify-center px-4 py-12 bg-cover bg-center bg-no-repeat bg-fixed text-white font-sans selection:bg-[#FF6B2B]/30"
       style={{ backgroundImage: "url('/bg6.jpg')" }}
     >
+      <div className="absolute top-6 left-6 sm:top-10 sm:left-10 z-50">
+        <Link
+          href="/"
+          className="inline-block rounded-xl bg-[#FF6B2B] px-5 py-2 text-sm font-bold text-black transition-all hover:scale-[1.02] hover:brightness-110"
+        >
+          <span className="mr-2">←</span> Back to Home
+        </Link>
+      </div>
 
-      <div className="relative w-full max-w-md">
-        <div className="mb-4 text-center flex justify-center">
+      <div className="relative w-full max-w-md mt-12 sm:mt-0">
+        <div className="mb-6 flex justify-center text-center">
           <div className="inline-block bg-black/60 backdrop-blur-md px-8 py-3 rounded-2xl border border-zinc-700/50 shadow-xl">
             <Logo />
           </div>

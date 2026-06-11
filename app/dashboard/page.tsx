@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import ProfileDropdown from "@/components/ProfileDropdown";
 import SessionTracker from "@/components/SessionTracker";
-import CodingPracticeCard from "@/components/CodingPracticeCard";
+import InterviewCard from "@/components/InterviewCard";
 import { createClient } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/admin";
 
@@ -108,10 +108,13 @@ export default async function DashboardPage() {
     >
       <header className="border-b border-zinc-800 bg-black/60 backdrop-blur-md sticky top-0 z-50">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <Link href="/" className="text-lg font-bold tracking-tight">
-            <span className="text-[#FF6B2B]">Hacker</span>
-            <span className="text-white">Compliment</span>
-          </Link>
+          <Link href="/" className="flex items-center gap-0.5 text-lg font-bold tracking-tight" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              <img src="/logo-colored.png" alt="Logo" className="h-7 w-auto sm:h-8 -mr-1" />
+              <div className="flex">
+                <span className="text-white">Hacker</span>
+                <span className="text-[#FF6B2B]">Compliment</span>
+              </div>
+            </Link>
           <ProfileDropdown 
             name={displayName} 
             email={user.email || ""} 
@@ -188,32 +191,17 @@ export default async function DashboardPage() {
         <SessionTracker userId={user.id} />
 
         <div className="grid gap-6 sm:grid-cols-2">
-          {dashboardCards.map((card) => {
-            if (card.title === "Coding Practice") {
-              return <CodingPracticeCard key={card.title} userId={user.id} />;
-            }
-            return (
-              <div
-                key={card.title}
-                className="flex flex-col rounded-2xl border border-zinc-700 bg-black/60 p-6 shadow-2xl backdrop-blur-lg transition-transform hover:-translate-y-1"
-              >
-                <h2 className="text-lg font-semibold text-white">{card.title}</h2>
-                <p className="mt-2 flex-1 text-sm leading-relaxed text-zinc-400">
-                  {card.description}
-                </p>
-                <Link
-                  href={card.href}
-                  className={`mt-6 block w-full rounded-xl py-3 text-center text-sm font-semibold transition-colors ${
-                    card.primary
-                      ? "bg-[#FF6B2B] text-black transition-all duration-200 hover:scale-105 hover:brightness-110"
-                      : "border border-zinc-700 text-white hover:border-[#FF6B2B]/50 hover:bg-zinc-800"
-                  }`}
-                >
-                  {card.label}
-                </Link>
-              </div>
-            );
-          })}
+          {dashboardCards.map((card) => (
+            <InterviewCard
+              key={card.title}
+              userId={user.id}
+              title={card.title}
+              description={card.description}
+              href={card.href}
+              label={card.label}
+              primary={card.primary}
+            />
+          ))}
         </div>
 
         {isAdminUser && (
@@ -224,22 +212,28 @@ export default async function DashboardPage() {
               </span>
               <h2 className="text-xl font-bold text-white">Admin Panel</h2>
             </div>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Link
                 href="/admin/review"
-                className="flex items-center justify-center rounded-xl border border-zinc-600 bg-black/60 backdrop-blur-md py-4 text-sm font-semibold text-white transition-all hover:border-[#FF6B2B]/60 hover:bg-black/80 shadow-md"
+                className="flex items-center justify-center rounded-xl border border-zinc-600 bg-black/60 backdrop-blur-md py-4 text-sm font-semibold text-white transition-all hover:border-[#FF6B2B]/60 hover:bg-black/80 shadow-md text-center px-2"
               >
                 Review Questions
               </Link>
               <Link
                 href="/admin/problems"
-                className="flex items-center justify-center rounded-xl border border-zinc-600 bg-black/60 backdrop-blur-md py-4 text-sm font-semibold text-white transition-all hover:border-[#FF6B2B]/60 hover:bg-black/80 shadow-md"
+                className="flex items-center justify-center rounded-xl border border-zinc-600 bg-black/60 backdrop-blur-md py-4 text-sm font-semibold text-white transition-all hover:border-[#FF6B2B]/60 hover:bg-black/80 shadow-md text-center px-2"
               >
                 Review Problems
               </Link>
               <Link
+                href="/admin/feedback"
+                className="flex items-center justify-center rounded-xl border border-zinc-600 bg-black/60 backdrop-blur-md py-4 text-sm font-semibold text-white transition-all hover:border-[#FF6B2B]/60 hover:bg-black/80 shadow-md text-center px-2"
+              >
+                Review Feedbacks
+              </Link>
+              <Link
                 href="/admin/analytics"
-                className="flex items-center justify-center rounded-xl border border-[#FF6B2B]/50 bg-black/60 backdrop-blur-md py-4 text-sm font-bold text-[#FF6B2B] transition-all hover:bg-black/80 hover:border-[#FF6B2B] shadow-md"
+                className="flex items-center justify-center rounded-xl border border-[#FF6B2B]/50 bg-black/60 backdrop-blur-md py-4 text-sm font-bold text-[#FF6B2B] transition-all hover:bg-black/80 hover:border-[#FF6B2B] shadow-md text-center px-2"
               >
                 View Analytics
               </Link>

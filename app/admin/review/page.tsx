@@ -4,17 +4,12 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-// Hardcoded list of allowed admin emails
-const ADMIN_EMAILS = [
-  "mahadev.ambadi@btech.christuniversity.in",
-  // add others as needed
-];
+import { isAdmin } from "@/lib/admin";
 
 export default function AdminReviewPage() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isIngesting, setIsIngesting] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
@@ -30,13 +25,13 @@ export default function AdminReviewPage() {
         return;
       }
       
-      if (!user.email || !ADMIN_EMAILS.includes(user.email)) {
+      if (!user || !isAdmin(user.id)) {
         setError("You do not have permission to view this page.");
         setLoading(false);
         return;
       }
 
-      setIsAdmin(true);
+      setIsUserAdmin(true);
       await fetchQueue();
     }
 
@@ -146,9 +141,9 @@ export default function AdminReviewPage() {
     );
   }
 
-  if (!isAdmin || error) {
+  if (!isUserAdmin || error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#09090b] text-white">
+      <div className="flex h-screen flex-col items-center justify-center bg-[#09090b] text-white">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-500 mb-4">Access Denied</h1>
           <p className="text-zinc-400">{error}</p>
@@ -162,9 +157,12 @@ export default function AdminReviewPage() {
       <header className="border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-md sticky top-0 z-10">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-xl font-bold tracking-tight inline-block hover:opacity-80 transition-opacity">
-              <span className="text-[#FF6B2B]">Hacker</span>
-              <span className="text-white">Compliment</span>
+            <Link href="/dashboard" className="flex items-center gap-0.5 text-xl font-bold tracking-tight hover:opacity-80 transition-opacity" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              <img src="/logo-colored.png" alt="Logo" className="h-7 w-auto sm:h-8 -mr-1" />
+              <div className="flex">
+                <span className="text-white">Hacker</span>
+                <span className="text-[#FF6B2B]">Compliment</span>
+              </div>
             </Link>
             <Link href="/admin/problems" className="text-sm text-zinc-400 hover:text-white transition-colors">
               Problems Queue

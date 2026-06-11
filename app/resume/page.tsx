@@ -1,33 +1,107 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect, useMemo } from "react";
 import type { ResumeAnalysisResult } from "@/app/api/analyze-resume/route";
 
 type Step = "upload" | "results";
 
 const roles = [
-  "Software Engineer",
-  "Data Analyst",
-  "Business Analyst",
-  "Full Stack Developer",
-  "Frontend Developer",
-  "Backend Developer",
-  "DevOps Engineer",
-  "Other",
+  // Software Development
+  'Software Engineer',
+  'Senior Software Engineer',
+  'Full Stack Developer',
+  'Frontend Developer',
+  'Backend Developer',
+  'Mobile Developer (Android)',
+  'Mobile Developer (iOS)',
+  'React Native Developer',
+  'Flutter Developer',
+
+  // Data & AI
+  'Data Analyst',
+  'Data Scientist',
+  'Machine Learning Engineer',
+  'AI Engineer',
+  'Data Engineer',
+  'Business Intelligence Analyst',
+  'NLP Engineer',
+  'Computer Vision Engineer',
+
+  // Cloud & DevOps
+  'DevOps Engineer',
+  'Cloud Engineer',
+  'Site Reliability Engineer (SRE)',
+  'AWS Solutions Architect',
+  'Platform Engineer',
+  'Infrastructure Engineer',
+
+  // Security
+  'Cybersecurity Analyst',
+  'Security Engineer',
+  'Penetration Tester',
+
+  // Product & Design
+  'Product Manager',
+  'Associate Product Manager',
+  'UI/UX Designer',
+  'Product Designer',
+
+  // Business & Consulting
+  'Business Analyst',
+  'Systems Analyst',
+  'Management Consultant',
+  'IT Consultant',
+  'ERP Consultant (SAP)',
+  'Salesforce Developer',
+
+  // QA & Testing
+  'QA Engineer',
+  'Test Automation Engineer',
+  'Manual Tester',
+
+  // Database
+  'Database Administrator',
+  'Database Developer',
+
+  // Management
+  'Engineering Manager',
+  'Technical Lead',
+  'Scrum Master',
+  'Project Manager',
+
+  // Finance Tech
+  'Quantitative Analyst',
+  'Fintech Developer',
+
+  // Support & Operations
+  'Technical Support Engineer',
+  'IT Support Specialist',
+  'Network Engineer',
+  'Systems Administrator',
+
+  'Other'
 ];
 
 const companies = [
-  "TCS",
-  "Wipro",
-  "Infosys",
-  "Accenture",
-  "Cognizant",
-  "Amazon",
-  "Google",
-  "Microsoft",
-  "Deloitte",
-  "Any Company",
+  "TCS", "Wipro", "Infosys", "Cognizant", "HCL", "Tech Mahindra", "Mphasis",
+  "Hexaware", "L&T Infotech", "Persistent Systems", "NIIT Technologies", "Mindtree",
+  "Mastech", "Zensar", "Cyient", "Sonata Software", "Tata Elxsi", "KPIT Technologies",
+  "Flipkart", "Zomato", "Swiggy", "Paytm", "PhonePe", "Ola", "BYJU'S",
+  "Meesho", "Razorpay", "Freshworks", "Zoho", "Zepto", "Cred", "Dream11", "Nykaa",
+  "Policybazaar", "Lenskart", "Dunzo", "Urban Company", "BigBasket", "Udaan",
+  "Groww", "Zerodha", "Upstox", "Slice", "BrowserStack", "Postman", "Chargebee",
+  "Hasura", "Clevertap", "MoEngage", "Mixpanel India", "Druva", "Innovaccer",
+  "Google", "Amazon", "AWS", "Microsoft", "Meta", "Apple", "Netflix", "Uber",
+  "Airbnb", "LinkedIn", "Twitter", "Salesforce", "Adobe", "Oracle", "IBM", "SAP",
+  "Cisco", "Intel", "Qualcomm", "Texas Instruments", "Nvidia", "Atlassian",
+  "Stripe", "Square", "Shopify", "Spotify", "Snap", "Pinterest", "Reddit",
+  "Dropbox", "Box", "Slack", "Zoom", "HubSpot", "Workday", "ServiceNow",
+  "Goldman Sachs", "JPMorgan", "Morgan Stanley", "Deutsche Bank",
+  "Barclays", "HSBC", "Citi", "McKinsey", "BCG", "Bain", "Deloitte", "Accenture",
+  "EY", "PwC", "KPMG", "Capgemini", "Wipro Consulting", "GlobalLogic",
+  "Anthropic", "Canva", "Cloudflare", "Datadog", "DeepSeek", "Discord", "Figma", 
+  "GitHub", "Hugging Face", "Intuitive", "PayPal", "Trimble", "Any Company"
 ];
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -95,6 +169,19 @@ export default function ResumePage() {
   const [file, setFile] = useState<File | null>(null);
   const [targetRole, setTargetRole] = useState(roles[0]);
   const [targetCompany, setTargetCompany] = useState(companies[0]);
+  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
+
+  const filteredRoles = useMemo(() => {
+    if (!targetRole) return roles;
+    return roles.filter(r => r.toLowerCase().includes(targetRole.toLowerCase()));
+  }, [targetRole]);
+
+  const filteredCompanies = useMemo(() => {
+    if (!targetCompany) return companies;
+    return companies.filter(c => c.toLowerCase().includes(targetCompany.toLowerCase()));
+  }, [targetCompany]);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -114,6 +201,44 @@ export default function ResumePage() {
   const [jdMatchData, setJdMatchData] = useState<any>(null);
   const [jdMatching, setJdMatching] = useState(false);
   const jdFileInputRef = useRef<HTMLInputElement>(null);
+
+  const [fixesUsed, setFixesUsed] = useState(0);
+  const [fixesLimit, setFixesLimit] = useState(3);
+  const [isUnlimitedFixes, setIsUnlimitedFixes] = useState(false);
+
+  useEffect(() => {
+    async function checkLimits() {
+      try {
+        const { createClient } = await import("@/lib/supabase");
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
+        if (!userId) return;
+
+        const headers: HeadersInit = {};
+        if (session?.access_token) {
+          headers.Authorization = `Bearer ${session.access_token}`;
+        }
+        const res = await fetch("/api/session-limit", { headers });
+        const data = await res.json();
+        
+        if (data.isUnlimitedPlan) {
+          setIsUnlimitedFixes(true);
+        } else {
+          let limit = 3;
+          if (data.planName === 'basic') limit = 6;
+          if (data.planName === 'standard') limit = 9;
+          setFixesLimit(limit);
+        }
+        
+        const used = parseInt(localStorage.getItem(`resume_fixes_${userId}`) || '0');
+        setFixesUsed(used);
+      } catch (err) {
+        console.error("Failed to check limits", err);
+      }
+    }
+    checkLimits();
+  }, []);
 
   const validateAndSetFile = useCallback((selected: File | null) => {
     if (!selected) return;
@@ -316,6 +441,7 @@ export default function ResumePage() {
   }
   async function handleFixResume() {
     if (!resumeText || !analysis) return;
+    if (!isUnlimitedFixes && fixesUsed >= fixesLimit) return;
     
     setFixing(true);
     try {
@@ -335,6 +461,18 @@ export default function ResumePage() {
       if (!res.ok) throw new Error(data.error || "Failed to fix resume.");
       
       setFixData(data);
+      
+      if (!isUnlimitedFixes) {
+        const { createClient } = await import("@/lib/supabase");
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
+        if (userId) {
+          const newUsed = fixesUsed + 1;
+          localStorage.setItem(`resume_fixes_${userId}`, newUsed.toString());
+          setFixesUsed(newUsed);
+        }
+      }
     } catch (err) {
       console.error(err);
       alert("Failed to fix resume. Please try again.");
@@ -395,9 +533,12 @@ export default function ResumePage() {
       <header className="border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-lg font-bold tracking-tight">
-              <span className="text-[#FF6B2B]">Hacker</span>
-              <span className="text-white">Compliment</span>
+            <Link href="/dashboard" className="flex items-center gap-0.5 text-lg font-bold tracking-tight" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              <img src="/logo-colored.png" alt="Logo" className="h-7 w-auto sm:h-8 -mr-1" />
+              <div className="flex">
+                <span className="text-white">Hacker</span>
+                <span className="text-[#FF6B2B]">Compliment</span>
+              </div>
             </Link>
             <span className="text-xs text-zinc-500 sm:text-sm">Resume Analyzer</span>
           </div>
@@ -452,7 +593,7 @@ export default function ResumePage() {
         {step === "upload" && activeTab === "analyze" && (
           <div className="transition-opacity duration-300 flex flex-col items-center">
             <div className="mb-3 text-center inline-block bg-black/60 backdrop-blur-md px-6 py-3 rounded-2xl border border-zinc-800/50">
-              <h1 className="text-3xl font-bold text-white sm:text-4xl drop-shadow-md">AI Resume Analyzer</h1>
+              <h1 className="text-3xl font-bold text-white sm:text-4xl drop-shadow-md"><span className="text-[#FF6B2B]">AI Resume</span> Analyzer</h1>
               <p className="mt-1 text-sm text-zinc-300 drop-shadow-sm">
                 Find out if your resume will pass ATS screening
               </p>
@@ -497,44 +638,85 @@ export default function ResumePage() {
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <div>
+                <div className="relative">
                   <label htmlFor="targetRole" className="mb-1.5 block text-sm font-semibold text-zinc-100">
                     Target Role
                   </label>
-                  <select
+                  <input
+                    type="text"
                     id="targetRole"
                     value={targetRole}
-                    onChange={(e) => setTargetRole(e.target.value)}
+                    onFocus={() => setShowRoleDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowRoleDropdown(false), 200)}
+                    onChange={(e) => {
+                      setTargetRole(e.target.value);
+                      setShowRoleDropdown(true);
+                    }}
                     disabled={loading}
-                    className={selectClass}
-                  >
-                    {roles.map((r) => (
-                      <option key={r} value={r} className="bg-zinc-900">
-                        {r}
-                      </option>
-                    ))}
-                  </select>
+                    className="w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#FF6B2B]/50 focus:ring-1 focus:ring-[#FF6B2B]/30"
+                    placeholder="E.g. Software Engineer"
+                    autoComplete="off"
+                  />
+                  {showRoleDropdown && (
+                    <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-[250px] overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-900 shadow-xl custom-scrollbar">
+                      {filteredRoles.length > 0 ? (
+                        filteredRoles.map((r) => (
+                          <div
+                            key={r}
+                            onMouseDown={() => {
+                              setTargetRole(r);
+                              setShowRoleDropdown(false);
+                            }}
+                            className="cursor-pointer px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                          >
+                            {r}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-2 text-sm text-zinc-500">No matching roles</div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <label
-                    htmlFor="targetCompany"
-                    className="mb-1.5 block text-sm font-semibold text-zinc-100"
-                  >
+                <div className="relative">
+                  <label htmlFor="targetCompany" className="mb-1.5 block text-sm font-semibold text-zinc-100">
                     Target Company
                   </label>
-                  <select
+                  <input
+                    type="text"
                     id="targetCompany"
                     value={targetCompany}
-                    onChange={(e) => setTargetCompany(e.target.value)}
+                    onFocus={() => setShowCompanyDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowCompanyDropdown(false), 200)}
+                    onChange={(e) => {
+                      setTargetCompany(e.target.value);
+                      setShowCompanyDropdown(true);
+                    }}
                     disabled={loading}
-                    className={selectClass}
-                  >
-                    {companies.map((c) => (
-                      <option key={c} value={c} className="bg-zinc-900">
-                        {c}
-                      </option>
-                    ))}
-                  </select>
+                    className="w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#FF6B2B]/50 focus:ring-1 focus:ring-[#FF6B2B]/30"
+                    placeholder="E.g. Google"
+                    autoComplete="off"
+                  />
+                  {showCompanyDropdown && (
+                    <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-[250px] overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-900 shadow-xl custom-scrollbar">
+                      {filteredCompanies.length > 0 ? (
+                        filteredCompanies.map((c) => (
+                          <div
+                            key={c}
+                            onMouseDown={() => {
+                              setTargetCompany(c);
+                              setShowCompanyDropdown(false);
+                            }}
+                            className="cursor-pointer px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                          >
+                            {c}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-2 text-sm text-zinc-500">No matching companies</div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -694,7 +876,7 @@ export default function ResumePage() {
         {step === "results" && activeTab === "analyze" && analysis && (
           <div ref={resultsRef} className="transition-opacity duration-300">
             {/* ATS Score Card */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 text-center">
+            <div className="rounded-2xl border border-zinc-700 bg-black/60 shadow-2xl backdrop-blur-lg p-8 text-center">
               <CircularScore score={analysis.atsScore} />
               {previousScore !== null && (
                 <div className="mt-4 flex justify-center">
@@ -737,7 +919,7 @@ export default function ResumePage() {
               ].map((card) => (
                 <div
                   key={card.label}
-                  className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 text-center"
+                  className="rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-5 text-center transition-transform hover:-translate-y-1"
                 >
                   <p className="text-xs text-zinc-500 sm:text-sm">{card.label}</p>
                   <p className={`mt-2 text-2xl font-bold ${getScoreColor(card.value)}`}>
@@ -750,7 +932,7 @@ export default function ResumePage() {
 
             {/* Section Breakdown */}
             {analysis.sectionScores && (
-              <div className="mt-8 rounded-2xl bg-zinc-900 p-6">
+              <div className="mt-8 rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-6">
                 <h3 className="mb-6 text-lg font-semibold text-white">📋 Section Breakdown</h3>
                 <div className="space-y-4">
                   {[
@@ -788,7 +970,7 @@ export default function ResumePage() {
             )}
 
             {/* Keywords */}
-            <div className="mt-8 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+            <div className="mt-8 rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-6">
               <h3 className="text-lg font-semibold text-white">Keywords Analysis</h3>
               <div className="mt-4">
                 <p className="text-sm font-medium text-[#FF6B2B]">Keywords Found</p>
@@ -827,7 +1009,7 @@ export default function ResumePage() {
             </div>
 
             {/* Issues */}
-            <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+            <div className="mt-6 rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-6">
               <h3 className="text-lg font-semibold text-white">Issues Found</h3>
               <ul className="mt-4 space-y-3">
                 {analysis.issuesFound.length > 0 ? (
@@ -844,7 +1026,7 @@ export default function ResumePage() {
             </div>
 
             {/* Suggestions */}
-            <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+            <div className="mt-6 rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-6">
               <h3 className="text-lg font-semibold text-white">Improvement Suggestions</h3>
               <ol className="mt-4 space-y-3">
                 {analysis.suggestions.map((suggestion, i) => (
@@ -862,13 +1044,27 @@ export default function ResumePage() {
             {/* Fix Resume Button */}
             <div className="mt-8 flex flex-col items-center">
               {!fixData && !fixing && (
-                <button
-                  type="button"
-                  onClick={handleFixResume}
-                  className="rounded-xl bg-[#FF6B2B] px-8 py-3 text-base font-bold text-black transition-all duration-200 hover:scale-105 hover:brightness-110 shadow-lg shadow-[#FF6B2B]/20"
-                >
-                  ✨ Fix My Resume with AI
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={handleFixResume}
+                    disabled={!isUnlimitedFixes && fixesUsed >= fixesLimit}
+                    className="rounded-xl bg-[#FF6B2B] px-8 py-3 text-base font-bold text-black transition-all duration-200 hover:scale-105 hover:brightness-110 shadow-lg shadow-[#FF6B2B]/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:brightness-100"
+                  >
+                    ✨ Fix My Resume with AI
+                  </button>
+                  {!isUnlimitedFixes && (
+                    <div className="mt-4 rounded-xl border border-zinc-700/50 bg-black/60 px-4 py-2 shadow-xl backdrop-blur-md">
+                      <p className="text-sm font-medium drop-shadow-sm">
+                        {fixesUsed >= fixesLimit ? (
+                          <span className="text-red-400">Free limit reached. Upgrade for more fixes!</span>
+                        ) : (
+                          <span className="text-zinc-300">{fixesLimit - fixesUsed} free fixes remaining</span>
+                        )}
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
               {fixing && (
                 <p className="text-center font-medium text-[#FF6B2B]">
@@ -881,7 +1077,7 @@ export default function ResumePage() {
             {fixData && (
               <div className="mt-8 space-y-6">
                 {/* Section A — Professional Summary */}
-                <div className="relative rounded-2xl border border-zinc-800 border-l-4 border-l-[#FF6B2B] bg-zinc-900/40 p-6">
+                <div className="relative rounded-2xl border border-zinc-700 border-l-4 border-l-[#FF6B2B] bg-black/60 shadow-xl backdrop-blur-md p-6">
                   <h3 className="text-lg font-semibold text-white">✅ Rewritten Professional Summary</h3>
                   <p className="mt-3 leading-relaxed text-zinc-300">{fixData.professionalSummary}</p>
                   <button
@@ -893,7 +1089,7 @@ export default function ResumePage() {
                 </div>
 
                 {/* Section B — Before & After Bullets */}
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+                <div className="rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-6">
                   <h3 className="text-lg font-semibold text-white">📝 Rewritten Bullet Points</h3>
                   <div className="mt-6 space-y-6">
                     {fixData.beforeAfterBullets?.map((item: any, i: number) => (
@@ -915,7 +1111,7 @@ export default function ResumePage() {
                 </div>
 
                 {/* Section C — Skills To Add */}
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+                <div className="rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-6">
                   <h3 className="text-lg font-semibold text-white">🎯 Add These Skills to Your Resume</h3>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {fixData.skillsToAdd?.map((skill: string) => (
@@ -930,7 +1126,7 @@ export default function ResumePage() {
                 </div>
 
                 {/* Section D — Quick Wins */}
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+                <div className="rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-6">
                   <h3 className="text-lg font-semibold text-white">⚡ Quick Wins</h3>
                   <ul className="mt-4 space-y-3">
                     {fixData.quickWins?.map((win: string, i: number) => (
@@ -992,7 +1188,7 @@ export default function ResumePage() {
               <button
                 type="button"
                 onClick={handleAnalyzeAnother}
-                className="rounded-xl border border-zinc-700 px-8 py-3 text-sm font-semibold text-white transition-colors hover:border-[#FF6B2B]/50 hover:bg-zinc-800 sm:min-w-[220px]"
+                className="rounded-xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md px-8 py-3 text-sm font-semibold text-white transition-all hover:border-[#FF6B2B]/50 hover:bg-black/80 sm:min-w-[220px]"
               >
                 Analyze Another Resume
               </button>
@@ -1009,7 +1205,7 @@ export default function ResumePage() {
         {step === "results" && activeTab === "jdmatch" && jdMatchData && (
           <div className="transition-opacity duration-300">
             {/* TOP - Match Score Circle */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 text-center">
+            <div className="rounded-2xl border border-zinc-700 bg-black/60 shadow-2xl backdrop-blur-lg p-8 text-center">
               <CircularScore score={jdMatchData.matchScore} />
               <h2 className="mt-6 text-xl font-semibold text-white">JD Match Score</h2>
               <p className={`mt-2 text-lg font-bold ${getScoreColor(jdMatchData.matchScore)}`}>
@@ -1031,7 +1227,7 @@ export default function ResumePage() {
 
             {/* MIDDLE - Skills */}
             <div className="mt-6 grid gap-6 md:grid-cols-2">
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+              <div className="rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-6">
                 <h3 className="text-lg font-semibold text-white">✅ Matched Skills</h3>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {jdMatchData.matchedSkills?.length > 0 ? (
@@ -1046,7 +1242,7 @@ export default function ResumePage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+              <div className="rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-6">
                 <h3 className="text-lg font-semibold text-white">❌ Missing Skills</h3>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {jdMatchData.missingSkills?.length > 0 ? (
@@ -1064,7 +1260,7 @@ export default function ResumePage() {
 
             {/* Below that - Requirements */}
             <div className="mt-6 grid gap-6 md:grid-cols-2">
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+              <div className="rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-6">
                 <h3 className="text-lg font-semibold text-white">✅ Requirements Met</h3>
                 <ul className="mt-4 space-y-3">
                   {jdMatchData.matchedRequirements?.length > 0 ? (
@@ -1080,7 +1276,7 @@ export default function ResumePage() {
                 </ul>
               </div>
 
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+              <div className="rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-6">
                 <h3 className="text-lg font-semibold text-white">❌ Requirements Missing</h3>
                 <ul className="mt-4 space-y-3">
                   {jdMatchData.missingRequirements?.length > 0 ? (
@@ -1098,7 +1294,7 @@ export default function ResumePage() {
             </div>
 
             {/* BOTTOM - Experience Match */}
-            <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 flex flex-col items-center">
+            <div className="mt-6 rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-6 flex flex-col items-center">
               <h3 className="text-sm font-medium text-zinc-400">Experience Level Match</h3>
               <span className={`mt-3 inline-block rounded-full px-6 py-2 text-sm font-bold ${
                 jdMatchData.experienceMatch === 'Perfect Match' ? 'bg-[#FF6B2B]/20 text-[#FF6B2B]' :
@@ -1110,7 +1306,7 @@ export default function ResumePage() {
             </div>
 
             {/* BOTTOM - Recommendations */}
-            <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+            <div className="mt-6 rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-6">
               <h3 className="text-lg font-semibold text-white">🚀 How to Improve Your Match</h3>
               <div className="mt-4 space-y-4">
                 {jdMatchData.topRecommendations?.map((rec: string, i: number) => (
@@ -1128,7 +1324,7 @@ export default function ResumePage() {
               <button
                 type="button"
                 onClick={handleAnalyzeAnother}
-                className="rounded-xl border border-zinc-700 px-8 py-3 text-sm font-semibold text-white transition-colors hover:border-[#FF6B2B]/50 hover:bg-zinc-800 sm:min-w-[220px]"
+                className="rounded-xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md px-8 py-3 text-sm font-semibold text-white transition-all hover:border-[#FF6B2B]/50 hover:bg-black/80 sm:min-w-[220px]"
               >
                 Analyze Another Resume
               </button>

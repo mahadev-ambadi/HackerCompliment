@@ -34,14 +34,16 @@ const companies = [
   "Policybazaar", "Lenskart", "Dunzo", "Urban Company", "BigBasket", "Udaan",
   "Groww", "Zerodha", "Upstox", "Slice", "BrowserStack", "Postman", "Chargebee",
   "Hasura", "Clevertap", "MoEngage", "Mixpanel India", "Druva", "Innovaccer",
-  "Google", "Amazon", "Microsoft", "Meta", "Apple", "Netflix", "Uber",
+  "Google", "Amazon", "AWS", "Microsoft", "Meta", "Apple", "Netflix", "Uber",
   "Airbnb", "LinkedIn", "Twitter", "Salesforce", "Adobe", "Oracle", "IBM", "SAP",
   "Cisco", "Intel", "Qualcomm", "Texas Instruments", "Nvidia", "Atlassian",
   "Stripe", "Square", "Shopify", "Spotify", "Snap", "Pinterest", "Reddit",
   "Dropbox", "Box", "Slack", "Zoom", "HubSpot", "Workday", "ServiceNow",
   "Goldman Sachs", "JPMorgan", "Morgan Stanley", "Deutsche Bank",
   "Barclays", "HSBC", "Citi", "McKinsey", "BCG", "Bain", "Deloitte", "Accenture",
-  "EY", "PwC", "KPMG", "Capgemini", "Wipro Consulting"
+  "EY", "PwC", "KPMG", "Capgemini", "Wipro Consulting", "GlobalLogic",
+  "Anthropic", "Canva", "Cloudflare", "Datadog", "DeepSeek", "Discord", "Figma", 
+  "GitHub", "Hugging Face", "Intuitive", "PayPal", "Trimble"
 ];
 
 const roles = [
@@ -475,10 +477,13 @@ export default function MockInterviewPage() {
         <header className="border-b border-zinc-800 bg-zinc-900/50 px-6 py-4 backdrop-blur-md">
           <div className="mx-auto flex max-w-6xl items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link href="/dashboard" className="text-lg font-bold tracking-tight">
-                <span className="text-[#FF6B2B]">Hacker</span>
-                <span className="text-white">Compliment</span>
-              </Link>
+              <Link href="/dashboard" className="flex items-center gap-0.5 text-lg font-bold tracking-tight" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              <img src="/logo-colored.png" alt="Logo" className="h-7 w-auto sm:h-8 -mr-1" />
+              <div className="flex">
+                <span className="text-white">Hacker</span>
+                <span className="text-[#FF6B2B]">Compliment</span>
+              </div>
+            </Link>
             </div>
           </div>
         </header>
@@ -646,11 +651,14 @@ export default function MockInterviewPage() {
     return (
       <div className="min-h-screen bg-zinc-950 font-sans text-white flex flex-col">
         {/* Top Bar */}
-        <header className="border-b border-zinc-800 bg-zinc-900/50 px-6 py-4 flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4 sm:gap-0">
+        <header className="border-b border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md px-6 py-4 flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4 sm:gap-0">
           <div>
-            <Link href="/dashboard" className="text-lg font-bold tracking-tight block mb-1 hover:opacity-80 transition-opacity">
-              <span className="text-[#FF6B2B]">Hacker</span>
-              <span className="text-white">Compliment</span>
+            <Link href="/dashboard" className="flex items-center gap-0.5 text-lg font-bold tracking-tight mb-1 hover:opacity-80 transition-opacity" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              <img src="/logo-colored.png" alt="Logo" className="h-7 w-auto sm:h-8 -mr-1" />
+              <div className="flex">
+                <span className="text-white">Hacker</span>
+                <span className="text-[#FF6B2B]">Compliment</span>
+              </div>
             </Link>
             <h2 className="font-bold text-lg leading-tight">{company}</h2>
             <p className="text-xs text-zinc-400 mt-0.5">{role}</p>
@@ -682,7 +690,7 @@ export default function MockInterviewPage() {
         <main className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 p-6 lg:p-12 max-w-7xl mx-auto w-full">
           {/* Left Panel */}
           <div className="flex flex-col justify-center space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/50 px-4 py-1.5 text-xs font-semibold text-zinc-300 w-fit">
+            <div className="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md px-4 py-1.5 text-xs font-semibold text-zinc-300 w-fit">
               {currentQ.interview_type}
             </div>
 
@@ -702,7 +710,7 @@ export default function MockInterviewPage() {
               {!isPlaying && (
                 <button
                   onClick={() => playAdamVoice(`Hello ${firstName}, ${currentQ.question}`)}
-                  className="flex items-center gap-2 rounded-full bg-zinc-800/80 px-4 py-2 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white border border-zinc-700/50"
+                  className="flex items-center gap-2 rounded-full bg-black/60 backdrop-blur-md px-4 py-2 text-xs font-medium text-zinc-400 transition-colors hover:bg-black/80 hover:text-white border border-zinc-700 shadow-xl"
                 >
                   <span className="text-[10px]">🔁</span> Replay question
                 </button>
@@ -711,7 +719,7 @@ export default function MockInterviewPage() {
           </div>
 
           {/* Right Panel */}
-          <div className="flex flex-col rounded-3xl border border-zinc-800 bg-zinc-900/40 p-6 lg:p-8 relative">
+          <div className="flex flex-col rounded-3xl border border-zinc-700 bg-black/60 shadow-2xl backdrop-blur-lg p-6 lg:p-8 relative">
             {!currentEvaluation ? (
               <>
                 <h3 className="text-lg font-semibold mb-6">Your turn, <span className="text-[#FF6B2B]">{firstName}</span></h3>
@@ -838,7 +846,7 @@ export default function MockInterviewPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="md:col-span-2 rounded-3xl border border-zinc-800 bg-zinc-900/50 p-8 flex flex-col items-center justify-center relative overflow-hidden">
+            <div className="md:col-span-2 rounded-3xl border border-zinc-700 bg-black/60 shadow-2xl backdrop-blur-lg p-8 flex flex-col items-center justify-center relative overflow-hidden">
               <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-[#FF6B2B] to-transparent opacity-50" />
               <p className="text-sm font-medium text-zinc-400 uppercase tracking-widest mb-2">Overall Score</p>
               <div className="flex items-baseline gap-2">
@@ -849,7 +857,7 @@ export default function MockInterviewPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-zinc-800 bg-zinc-900/50 p-8 flex flex-col items-center justify-center">
+            <div className="rounded-3xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-8 flex flex-col items-center justify-center">
               <p className="text-sm font-medium text-zinc-400 uppercase tracking-widest mb-2 text-center">Filler Words</p>
               <span className="text-5xl font-bold text-white">{totalFillers}</span>
               <p className="text-xs text-zinc-500 mt-2 text-center">Used across {evaluations.length} answers</p>
@@ -857,7 +865,7 @@ export default function MockInterviewPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-6">
+            <div className="rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-6">
               <h3 className="text-lg font-bold mb-4">Round Breakdown</h3>
               <div className="space-y-4">
                 {Object.keys(roundScores).length > 0 ? (
@@ -878,7 +886,7 @@ export default function MockInterviewPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-6">
+            <div className="rounded-2xl border border-zinc-700 bg-black/60 shadow-xl backdrop-blur-md p-6">
               <h3 className="text-lg font-bold mb-4">Top Feedback</h3>
               <ul className="space-y-3">
                 {evaluations.length === 0 ? (

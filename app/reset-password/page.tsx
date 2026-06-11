@@ -7,10 +7,13 @@ import { createClient } from "@/lib/supabase";
 
 function Logo() {
   return (
-    <Link href="/" className="text-xl font-bold tracking-tight">
-      <span className="text-[#FF6B2B]">Hacker</span>
-      <span className="text-white">Compliment</span>
-    </Link>
+    <Link href="/" className="flex items-center gap-0.5 text-xl font-bold tracking-tight" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              <img src="/logo-colored.png" alt="Logo" className="h-7 w-auto sm:h-8 -mr-1" />
+              <div className="flex">
+                <span className="text-white">Hacker</span>
+                <span className="text-[#FF6B2B]">Compliment</span>
+              </div>
+            </Link>
   );
 }
 
