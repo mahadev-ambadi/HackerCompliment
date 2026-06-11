@@ -10,8 +10,9 @@ export async function GET(request: Request) {
   try {
     // 1. Verify CRON_SECRET header (skip in development)
     if (process.env.NODE_ENV !== 'development') {
-      const authHeader = request.headers.get('authorization');
-      if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      const isVercelCron = request.headers.get('x-vercel-cron');
+      const cronSecret = request.headers.get('x-cron-secret');
+      if (!isVercelCron && cronSecret !== process.env.CRON_SECRET) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     }

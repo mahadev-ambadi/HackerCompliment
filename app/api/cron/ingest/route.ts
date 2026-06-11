@@ -15,8 +15,9 @@ const RSS_FEEDS = [
 
 export async function GET(request: Request) {
   if (process.env.NODE_ENV !== 'development') {
+    const isVercelCron = request.headers.get('x-vercel-cron');
     const cronSecret = request.headers.get('x-cron-secret');
-    if (cronSecret !== process.env.CRON_SECRET) {
+    if (!isVercelCron && cronSecret !== process.env.CRON_SECRET) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
   }
