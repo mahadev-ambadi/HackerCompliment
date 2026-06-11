@@ -2,19 +2,19 @@
   "crons": [
     {
       "path": "/api/cron/ingest",
-      "schedule": "0 * * * *"
+      "schedule": "0 2 * * *"
     },
     {
       "path": "/api/cron/extract",
-      "schedule": "30 * * * *"
+      "schedule": "30 2 * * *"
     },
     {
       "path": "/api/cron/ingest-problems",
-      "schedule": "0 */8 * * *"
+      "schedule": "0 3 * * *"
     },
     {
       "path": "/api/cron/extract-problems",
-      "schedule": "30 */8 * * *"
+      "schedule": "30 3 * * *"
     }
   ]
 }
