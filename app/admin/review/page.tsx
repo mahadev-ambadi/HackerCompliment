@@ -24,7 +24,7 @@ export default function AdminReviewPage() {
         router.push("/login");
         return;
       }
-      
+
       if (!user || !isAdmin(user.id)) {
         setError("You do not have permission to view this page.");
         setLoading(false);
@@ -40,28 +40,12 @@ export default function AdminReviewPage() {
 
   async function fetchQueue() {
     setLoading(true);
-    const { data, error: fetchError } = await supabase
-      .from("review_queue")
-      .select(`
-        id,
-        created_at,
-        extracted_questions (
-          id,
-          company,
-          role,
-          round,
-          question,
-          occurrence_count
-        )
-      `)
-      .eq("reviewed", false)
-      .order("created_at", { ascending: true });
-
-    if (fetchError) {
-      console.error(fetchError);
+    const res = await fetch("/api/admin/review-queue");
+    const json = await res.json();
+    if (json.error) {
       setError("Failed to load review queue.");
     } else {
-      setItems(data || []);
+      setItems(json.data || []);
     }
     setLoading(false);
   }
@@ -191,7 +175,7 @@ export default function AdminReviewPage() {
             &larr; Back
           </button>
         </div>
-        
+
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mb-10 flex items-center justify-between">
             <div>
@@ -212,20 +196,20 @@ export default function AdminReviewPage() {
               <h2 className="text-2xl font-bold text-white mb-2">Queue is Empty</h2>
               <p className="text-zinc-400">All caught up! No pending questions to review.</p>
               <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
-                <button 
+                <button
                   onClick={fetchQueue}
                   className="rounded-lg bg-zinc-800 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-700"
                 >
                   Refresh Queue
                 </button>
-                <button 
+                <button
                   onClick={runIngest}
                   disabled={isIngesting}
                   className="rounded-lg bg-zinc-800 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:opacity-50"
                 >
                   {isIngesting ? "Running..." : "Run Ingest"}
                 </button>
-                <button 
+                <button
                   onClick={runExtract}
                   disabled={isExtracting}
                   className="rounded-lg bg-zinc-800 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:opacity-50"
@@ -254,7 +238,7 @@ export default function AdminReviewPage() {
                       "{item.extracted_questions?.question}"
                     </p>
                   </div>
-                  
+
                   <div className="flex items-center gap-3 mt-auto">
                     <button
                       onClick={() => handleReject(item.id)}

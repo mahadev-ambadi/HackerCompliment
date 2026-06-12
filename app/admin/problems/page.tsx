@@ -38,30 +38,13 @@ export default function AdminProblemsPage() {
   }, [router, supabase]);
 
   async function fetchProblems() {
-    // Assuming status defaults to 'pending' or null. The prompt specified "where status='pending'".
-    const { data, error } = await supabase
-      .from("raw_problems_extracted")
-      .select("*")
-      .eq("status", "pending")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      // Try fetching rows where status is null if 'pending' doesn't match
-      const { data: fallbackData } = await supabase
-        .from("raw_problems_extracted")
-        .select("*")
-        .is("status", null)
-        .order("created_at", { ascending: false });
-        
-      if (fallbackData) {
-        setProblems(fallbackData);
-        initializeEditableFields(fallbackData);
-      } else {
-        console.error("Error fetching problems:", error);
-      }
-    } else if (data) {
-      setProblems(data);
-      initializeEditableFields(data);
+    const res = await fetch("/api/admin/problems-queue");
+    const json = await res.json();
+    if (json.error) {
+      console.error("Error fetching problems:", json.error);
+    } else {
+      setProblems(json.data || []);
+      initializeEditableFields(json.data || []);
     }
   }
 
@@ -118,12 +101,10 @@ export default function AdminProblemsPage() {
 
   async function handleReject(id: string) {
     try {
-      const { error } = await supabase
-        .from("raw_problems_extracted")
-        .update({ status: "rejected" })
-        .eq("id", id);
-        
-      if (error) throw error;
+      const res = await fetch(`/api/admin/problems-queue?id=${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to reject");
       setProblems(prev => prev.filter(p => p.id !== id));
     } catch (e: any) {
       alert("Failed to reject problem: " + e.message);
