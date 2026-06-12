@@ -49,8 +49,8 @@ function parseRSS(xml: string): { title: string; link: string; content: string }
     const block = match[1];
 
     const title =
-      block.match(/<title[^>]*><!\[CDATA\[(.*?)\]\]><\/title>/s)?.[1] ||
-      block.match(/<title[^>]*>(.*?)<\/title>/s)?.[1] || "";
+      block.match(/<title[^>]*><!\[CDATA\[([\s\S]*?)\]\]><\/title>/)?.[1] ||
+      block.match(/<title[^>]*>([\s\S]*?)<\/title>/)?.[1] || "";
 
     const link =
       block.match(/<link[^>]+href="([^"]+)"/)?.[1] ||
@@ -58,8 +58,8 @@ function parseRSS(xml: string): { title: string; link: string; content: string }
       block.match(/<id>(https?:[^<]+)<\/id>/)?.[1] || "";
 
     const description =
-      block.match(/<(?:description|summary|content)[^>]*><!\[CDATA\[([\s\S]*?)\]\]>/s)?.[1] ||
-      block.match(/<(?:description|summary|content)[^>]*>([\s\S]*?)<\/(?:description|summary|content)>/s)?.[1] || "";
+      block.match(/<(?:description|summary|content)[^>]*><!\[CDATA\[([\s\S]*?)\]\]>/)?.[1] ||
+      block.match(/<(?:description|summary|content)[^>]*>([\s\S]*?)<\/(?:description|summary|content)>/)?.[1] || "";
 
     const text = description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
